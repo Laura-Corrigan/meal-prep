@@ -4,17 +4,27 @@ import { supabase } from './supabase'
 export default function App() {
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
-  const defaultTraining = {
-    monday: { label: 'Rest Day', icon: '😴', highCarb: false },
-    tuesday: { label: 'Reformer Pilates', icon: '🧘‍♀️', highCarb: false },
-    wednesday: { label: 'Tempo Run', icon: '🏃‍♀️', highCarb: false },
-    thursday: { label: 'Rest Day', icon: '😴', highCarb: false },
-    friday: { label: 'Pilates + Easy Run', icon: '🧘‍♀️🏃‍♀️', highCarb: true, note: 'High carb for Saturday long run' },
-    saturday: { label: 'Long Run', icon: '🏃‍♀️💪', highCarb: false },
-    sunday: { label: 'Rest Day', icon: '😴', highCarb: false }
+  const lauraDefaultTraining = {
+    monday: { label: 'Rest Day', icon: '😴' },
+    tuesday: { label: 'Reformer Pilates', icon: '🧘‍♀️' },
+    wednesday: { label: 'Tempo Run', icon: '🏃‍♀️' },
+    thursday: { label: 'Rest Day', icon: '😴' },
+    friday: { label: 'Pilates + Easy Run', icon: '🧘‍♀️🏃‍♀️' },
+    saturday: { label: 'Long Run', icon: '🏃‍♀️💪' },
+    sunday: { label: 'Rest Day', icon: '😴' }
   }
 
-  const workoutOptions = [
+  const ashDefaultTraining = {
+    monday: { label: 'Rest Day', icon: '😴' },
+    tuesday: { label: 'Swim', icon: '🏊‍♂️' },
+    wednesday: { label: 'Cycle', icon: '🚴‍♂️' },
+    thursday: { label: 'Run', icon: '🏃‍♂️' },
+    friday: { label: 'Swim', icon: '🏊‍♂️' },
+    saturday: { label: 'Long Ride', icon: '🚴‍♂️💪' },
+    sunday: { label: 'Long Run', icon: '🏃‍♂️💪' }
+  }
+
+  const lauraWorkoutOptions = [
     { label: 'Rest Day', icon: '😴' },
     { label: 'Reformer Pilates', icon: '🧘‍♀️' },
     { label: 'Tempo Run', icon: '🏃‍♀️' },
@@ -23,8 +33,24 @@ export default function App() {
     { label: 'Pilates + Easy Run', icon: '🧘‍♀️🏃‍♀️' },
     { label: 'Strength', icon: '💪' },
     { label: 'HIIT', icon: '🔥' },
-    { label: 'Swimming', icon: '🏊‍♀️' }
+    { label: 'Swimming', icon: '🏊‍♀️' },
+    { label: 'Yoga', icon: '🧘' }
   ]
+
+  const ashWorkoutOptions = [
+    { label: 'Rest Day', icon: '😴' },
+    { label: 'Swim', icon: '🏊‍♂️' },
+    { label: 'Open Water Swim', icon: '🌊' },
+    { label: 'Cycle', icon: '🚴‍♂️' },
+    { label: 'Long Ride', icon: '🚴‍♂️💪' },
+    { label: 'Run', icon: '🏃‍♂️' },
+    { label: 'Long Run', icon: '🏃‍♂️💪' },
+    { label: 'Brick (Bike+Run)', icon: '🚴‍♂️🏃‍♂️' },
+    { label: 'Strength', icon: '💪' },
+    { label: 'Recovery', icon: '🧘‍♂️' }
+  ]
+
+  const bigSessionLabels = ['Long Run', 'Long Ride', 'Brick (Bike+Run)', 'Open Water Swim']
 
   const initialRecipes = [
     { id: 'eating-out', name: 'Eating Out 🍽️', protein: 'none', prepTime: '0 min', isQuick: true, isSlowCooker: false, highCarb: false, ingredients: [], method: 'Enjoy your meal out!', notes: 'No cooking tonight', isEatingOut: true },
@@ -54,7 +80,8 @@ export default function App() {
   const [recipes, setRecipes] = useState(initialRecipes)
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0)
   const [weekPlans, setWeekPlans] = useState({ 0: {} })
-  const [training, setTraining] = useState({ 0: defaultTraining })
+  const [lauraTraining, setLauraTraining] = useState({ 0: lauraDefaultTraining })
+  const [ashTraining, setAshTraining] = useState({ 0: ashDefaultTraining })
   const [checkedItems, setCheckedItems] = useState({})
   const [selectedDay, setSelectedDay] = useState(null)
   const [editingWorkout, setEditingWorkout] = useState(null)
@@ -67,32 +94,42 @@ export default function App() {
   const [newRecipe, setNewRecipe] = useState({ name: '', protein: 'chicken', prepTime: '', isQuick: true, isSlowCooker: false, highCarb: false, source: 'tiktok', ingredients: '', method: '', notes: '' })
 
   const weekPlan = weekPlans[currentWeekOffset] || {}
-  const weekTraining = training[currentWeekOffset] || defaultTraining
+  const weekLauraTraining = lauraTraining[currentWeekOffset] || lauraDefaultTraining
+  const weekAshTraining = ashTraining[currentWeekOffset] || ashDefaultTraining
 
-  // Load data from Supabase on mount
+  const needsHighCarb = (day) => {
+    const dayIndex = days.indexOf(day)
+    const nextDayIndex = (dayIndex + 1) % 7
+    const nextDay = days[nextDayIndex]
+    const lauraNextDay = weekLauraTraining[nextDay]?.label
+    const ashNextDay = weekAshTraining[nextDay]?.label
+    return bigSessionLabels.includes(lauraNextDay) || bigSessionLabels.includes(ashNextDay)
+  }
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load recipes
         const { data: recipesData } = await supabase.from('recipes').select('*')
         if (recipesData && recipesData.length > 0) {
-          setRecipes([initialRecipes[0], ...recipesData]) // Keep eating out option
+          setRecipes([initialRecipes[0], ...recipesData])
         }
-
-        // Load week plans
         const { data: plansData } = await supabase.from('week_plans').select('*')
         if (plansData && plansData.length > 0) {
           const plans = {}
           plansData.forEach(p => { plans[p.week_offset] = p.plan })
           setWeekPlans(plans)
         }
-
-        // Load training
         const { data: trainingData } = await supabase.from('training').select('*')
         if (trainingData && trainingData.length > 0) {
-          const t = {}
-          trainingData.forEach(tr => { t[tr.week_offset] = tr.schedule })
-          setTraining(t)
+          const laura = {}
+          const ash = {}
+          trainingData.forEach(tr => {
+            if (tr.laura_schedule) laura[tr.week_offset] = tr.laura_schedule
+            if (tr.ash_schedule) ash[tr.week_offset] = tr.ash_schedule
+            if (tr.schedule && !tr.laura_schedule) laura[tr.week_offset] = tr.schedule
+          })
+          if (Object.keys(laura).length > 0) setLauraTraining(laura)
+          if (Object.keys(ash).length > 0) setAshTraining(ash)
         }
       } catch (e) {
         console.log('Load error, using defaults', e)
@@ -131,11 +168,18 @@ export default function App() {
     setSavedPlan(false)
   }
 
-  const updateWorkout = (day, workout) => {
-    setTraining(prev => ({
-      ...prev,
-      [currentWeekOffset]: { ...prev[currentWeekOffset], [day]: { ...workout, highCarb: prev[currentWeekOffset]?.[day]?.highCarb || false } }
-    }))
+  const updateWorkout = (day, person, workout) => {
+    if (person === 'laura') {
+      setLauraTraining(prev => ({
+        ...prev,
+        [currentWeekOffset]: { ...(prev[currentWeekOffset] || lauraDefaultTraining), [day]: workout }
+      }))
+    } else {
+      setAshTraining(prev => ({
+        ...prev,
+        [currentWeekOffset]: { ...(prev[currentWeekOffset] || ashDefaultTraining), [day]: workout }
+      }))
+    }
     setEditingWorkout(null)
     setSavedPlan(false)
   }
@@ -143,40 +187,32 @@ export default function App() {
   const generatePlan = () => {
     const newPlan = {}
     const used = new Set()
-    
     days.forEach(day => {
-      const dayTraining = weekTraining[day]
-      const needsHighCarb = dayTraining?.highCarb
+      const highCarbNeeded = needsHighCarb(day)
       const isWeekend = day === 'saturday' || day === 'sunday'
-      
       const redMeatCount = Object.values(newPlan).filter(id => {
         const r = recipes.find(rec => rec.id === id)
         return r && (r.protein === 'beef' || r.protein === 'pork')
       }).length
-      
       let pool = recipes.filter(r => !used.has(r.id) && !r.isEatingOut)
-      
       if (redMeatCount >= 1) {
         pool = pool.filter(r => r.protein !== 'beef' && r.protein !== 'pork')
       }
-      
       const healthyPool = pool.filter(r => r.protein === 'chicken' || r.protein === 'fish')
       if (healthyPool.length > 0 && Math.random() < 0.7) {
         pool = healthyPool
       }
       if (!isWeekend) pool = pool.filter(r => r.isQuick)
-      if (needsHighCarb) {
+      if (highCarbNeeded) {
         const hc = pool.filter(r => r.highCarb)
         if (hc.length > 0) pool = hc
       }
-      
       if (pool.length > 0) {
         const recipe = pool[Math.floor(Math.random() * pool.length)]
         newPlan[day] = recipe.id
         used.add(recipe.id)
       }
     })
-    
     setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: newPlan }))
     setSavedPlan(false)
   }
@@ -188,20 +224,17 @@ export default function App() {
 
   const savePlan = async () => {
     try {
-      // Save week plan
       await supabase.from('week_plans').upsert({
         week_offset: currentWeekOffset,
         plan: weekPlan,
         updated_at: new Date().toISOString()
       }, { onConflict: 'week_offset' })
-
-      // Save training
       await supabase.from('training').upsert({
         week_offset: currentWeekOffset,
-        schedule: weekTraining,
+        laura_schedule: weekLauraTraining,
+        ash_schedule: weekAshTraining,
         updated_at: new Date().toISOString()
       }, { onConflict: 'week_offset' })
-
       setSavedPlan(true)
     } catch (e) {
       console.log('Save error', e)
@@ -237,7 +270,6 @@ export default function App() {
       ...newRecipe,
       ingredients: newRecipe.ingredients.split('\n').filter(i => i.trim())
     }
-    
     try {
       await supabase.from('recipes').insert(recipe)
       setRecipes(prev => [...prev, recipe])
@@ -245,7 +277,6 @@ export default function App() {
       console.log('Add recipe error', e)
       setRecipes(prev => [...prev, recipe])
     }
-    
     setShowAddRecipe(false)
     setNewRecipe({ name: '', protein: 'chicken', prepTime: '', isQuick: true, isSlowCooker: false, highCarb: false, source: 'tiktok', ingredients: '', method: '', notes: '' })
   }
@@ -286,13 +317,11 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#faf9f7', fontFamily: 'system-ui, sans-serif' }}>
-      {/* Header */}
       <header style={{ background: 'white', borderBottom: '1px solid #eee', padding: '16px 24px' }}>
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>🥗 Meal Prep</h1>
         <p style={{ margin: '4px 0 0', color: '#666', fontSize: 14 }}>Weekly planning for Laura & Ash • Budget: £100/week</p>
       </header>
 
-      {/* Tabs */}
       <nav style={{ background: 'white', borderBottom: '1px solid #eee', padding: '0 24px', display: 'flex', gap: 8 }}>
         {['planner', 'recipes', 'shopping'].map(tab => (
           <button
@@ -317,10 +346,8 @@ export default function App() {
       </nav>
 
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
-        {/* PLANNER TAB */}
         {activeTab === 'planner' && (
           <>
-            {/* Week Navigation */}
             <div style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <button onClick={() => setCurrentWeekOffset(o => o - 1)} style={{ padding: '8px 16px', border: '1px solid #ddd', borderRadius: 6, background: 'white', cursor: 'pointer' }}>← Prev</button>
               <div style={{ textAlign: 'center' }}>
@@ -330,7 +357,6 @@ export default function App() {
               <button onClick={() => setCurrentWeekOffset(o => o + 1)} style={{ padding: '8px 16px', border: '1px solid #ddd', borderRadius: 6, background: 'white', cursor: 'pointer' }}>Next →</button>
             </div>
 
-            {/* Protein counts & actions */}
             <div style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
               <div style={{ display: 'flex', gap: 12, fontSize: 13 }}>
                 <span>🐔 Chicken: {proteinCounts.chicken}</span>
@@ -346,30 +372,42 @@ export default function App() {
               </div>
             </div>
 
-            {/* Days Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
               {days.map(day => {
-                const dayTraining = weekTraining[day] || defaultTraining[day]
+                const lauraWorkout = weekLauraTraining[day] || lauraDefaultTraining[day]
+                const ashWorkout = weekAshTraining[day] || ashDefaultTraining[day]
                 const recipeId = weekPlan[day]
                 const recipe = recipeId ? recipes.find(r => r.id === recipeId) : null
+                const highCarb = needsHighCarb(day)
 
                 return (
                   <div key={day} style={{ background: 'white', borderRadius: 12, padding: 16, border: '1px solid #eee' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                      <div>
-                        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, textTransform: 'capitalize' }}>{day}</h3>
-                        <div
-                          onClick={() => setEditingWorkout(day)}
-                          style={{ fontSize: 13, color: '#666', marginTop: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
-                        >
-                          <span>{dayTraining.icon}</span>
-                          <span>{dayTraining.label}</span>
-                          <span style={{ fontSize: 10, color: '#999' }}>✎</span>
-                        </div>
-                      </div>
-                      {dayTraining.highCarb && (
+                      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, textTransform: 'capitalize' }}>{day}</h3>
+                      {highCarb && (
                         <span style={{ fontSize: 11, background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10, height: 'fit-content' }}>🍝 High Carb</span>
                       )}
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12, fontSize: 13 }}>
+                      <div
+                        onClick={() => setEditingWorkout({ day, person: 'laura' })}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '4px 8px', marginLeft: -8, borderRadius: 6, background: '#fdf2f8' }}
+                      >
+                        <span style={{ fontWeight: 500, color: '#be185d', minWidth: 45 }}>Laura</span>
+                        <span>{lauraWorkout.icon}</span>
+                        <span style={{ color: '#666' }}>{lauraWorkout.label}</span>
+                        <span style={{ fontSize: 10, color: '#999', marginLeft: 'auto' }}>✎</span>
+                      </div>
+                      <div
+                        onClick={() => setEditingWorkout({ day, person: 'ash' })}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '4px 8px', marginLeft: -8, borderRadius: 6, background: '#eff6ff' }}
+                      >
+                        <span style={{ fontWeight: 500, color: '#1d4ed8', minWidth: 45 }}>Ash</span>
+                        <span>{ashWorkout.icon}</span>
+                        <span style={{ color: '#666' }}>{ashWorkout.label}</span>
+                        <span style={{ fontSize: 10, color: '#999', marginLeft: 'auto' }}>✎</span>
+                      </div>
                     </div>
 
                     {recipe ? (
@@ -390,8 +428,10 @@ export default function App() {
                       </button>
                     )}
 
-                    {dayTraining.note && (
-                      <div style={{ marginTop: 8, padding: 8, background: '#fef3c7', borderRadius: 6, fontSize: 12, color: '#92400e' }}>💡 {dayTraining.note}</div>
+                    {highCarb && (
+                      <div style={{ marginTop: 8, padding: 8, background: '#fef3c7', borderRadius: 6, fontSize: 11, color: '#92400e' }}>
+                        💡 High carb for tomorrow's big session
+                      </div>
                     )}
                   </div>
                 )
@@ -400,7 +440,6 @@ export default function App() {
           </>
         )}
 
-        {/* RECIPES TAB */}
         {activeTab === 'recipes' && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
@@ -447,7 +486,6 @@ export default function App() {
           </>
         )}
 
-        {/* SHOPPING TAB */}
         {activeTab === 'shopping' && (
           <>
             <div style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -505,13 +543,10 @@ export default function App() {
         )}
       </main>
 
-      {/* SELECT RECIPE MODAL */}
       {selectedDay && (
         <div onClick={() => setSelectedDay(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, maxWidth: 500, width: '100%', maxHeight: '80vh', overflow: 'auto', padding: 24 }}>
             <h2 style={{ margin: '0 0 16px', textTransform: 'capitalize' }}>Choose meal for {selectedDay}</h2>
-            
-            {/* Eating Out option at the top */}
             <div
               onClick={() => assignRecipe(selectedDay, 'eating-out')}
               style={{ padding: 12, background: '#fef3c7', borderRadius: 8, marginBottom: 16, cursor: 'pointer', borderLeft: '4px solid #f59e0b' }}
@@ -519,9 +554,7 @@ export default function App() {
               <div style={{ fontWeight: 500 }}>🍽️ Eating Out</div>
               <div style={{ fontSize: 12, color: '#666' }}>No cooking tonight</div>
             </div>
-            
             <div style={{ fontSize: 12, color: '#666', marginBottom: 8, fontWeight: 500 }}>OR CHOOSE A RECIPE:</div>
-            
             {recipes.filter(r => !r.isEatingOut).map(recipe => (
               <div
                 key={recipe.id}
@@ -536,26 +569,41 @@ export default function App() {
         </div>
       )}
 
-      {/* EDIT WORKOUT MODAL */}
       {editingWorkout && (
         <div onClick={() => setEditingWorkout(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, maxWidth: 400, width: '100%', padding: 24 }}>
-            <h2 style={{ margin: '0 0 16px', textTransform: 'capitalize' }}>{editingWorkout} Workout</h2>
-            {workoutOptions.map(w => (
-              <div
-                key={w.label}
-                onClick={() => updateWorkout(editingWorkout, w)}
-                style={{ padding: 14, background: weekTraining[editingWorkout]?.label === w.label ? '#fef3c7' : '#faf9f7', borderRadius: 8, marginBottom: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}
-              >
-                <span style={{ fontSize: 20 }}>{w.icon}</span>
-                <span>{w.label}</span>
-              </div>
-            ))}
+            <h2 style={{ margin: '0 0 16px', textTransform: 'capitalize' }}>
+              {editingWorkout.person === 'laura' ? '👩 Laura' : '👨 Ash'}'s {editingWorkout.day} Workout
+            </h2>
+            {(editingWorkout.person === 'laura' ? lauraWorkoutOptions : ashWorkoutOptions).map(w => {
+              const currentWorkout = editingWorkout.person === 'laura' 
+                ? weekLauraTraining[editingWorkout.day] 
+                : weekAshTraining[editingWorkout.day]
+              return (
+                <div
+                  key={w.label}
+                  onClick={() => updateWorkout(editingWorkout.day, editingWorkout.person, w)}
+                  style={{ 
+                    padding: 14, 
+                    background: currentWorkout?.label === w.label ? (editingWorkout.person === 'laura' ? '#fdf2f8' : '#eff6ff') : '#faf9f7', 
+                    borderRadius: 8, 
+                    marginBottom: 8, 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 12,
+                    border: currentWorkout?.label === w.label ? `2px solid ${editingWorkout.person === 'laura' ? '#ec4899' : '#3b82f6'}` : '2px solid transparent'
+                  }}
+                >
+                  <span style={{ fontSize: 20 }}>{w.icon}</span>
+                  <span>{w.label}</span>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
 
-      {/* VIEW RECIPE MODAL */}
       {viewingRecipe && (
         <div onClick={() => setViewingRecipe(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, maxWidth: 500, width: '100%', maxHeight: '80vh', overflow: 'auto', padding: 24 }}>
@@ -584,7 +632,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ADD RECIPE MODAL */}
       {showAddRecipe && (
         <div onClick={() => setShowAddRecipe(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
