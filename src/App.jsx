@@ -3,34 +3,15 @@ import { supabase } from './supabase'
 
 export default function App() {
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-
-  const lauraDefaultTraining = {
-    monday: { label: 'Rest Day', icon: '😴' },
-    tuesday: { label: 'Reformer Pilates', icon: '🧘‍♀️' },
-    wednesday: { label: 'Tempo Run', icon: '🏃‍♀️' },
-    thursday: { label: 'Rest Day', icon: '😴' },
-    friday: { label: 'Pilates + Easy Run', icon: '🧘‍♀️🏃‍♀️' },
-    saturday: { label: 'Long Run', icon: '🏃‍♀️💪' },
-    sunday: { label: 'Rest Day', icon: '😴' }
-  }
-
-  const ashDefaultTraining = {
-    monday: { label: 'Rest Day', icon: '😴' },
-    tuesday: { label: 'Swim', icon: '🏊‍♂️' },
-    wednesday: { label: 'Cycle', icon: '🚴‍♂️' },
-    thursday: { label: 'Run', icon: '🏃‍♂️' },
-    friday: { label: 'Swim', icon: '🏊‍♂️' },
-    saturday: { label: 'Long Ride', icon: '🚴‍♂️💪' },
-    sunday: { label: 'Long Run', icon: '🏃‍♂️💪' }
-  }
+  const dayLabels = { monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri', saturday: 'Sat', sunday: 'Sun' }
 
   const lauraWorkoutOptions = [
-    { label: 'Rest Day', icon: '😴' },
+    { label: 'Rest', icon: '😴' },
     { label: 'Reformer Pilates', icon: '🧘‍♀️' },
     { label: 'Tempo Run', icon: '🏃‍♀️' },
     { label: 'Easy Run', icon: '🏃‍♀️' },
     { label: 'Long Run', icon: '🏃‍♀️💪' },
-    { label: 'Pilates + Easy Run', icon: '🧘‍♀️🏃‍♀️' },
+    { label: 'Pilates + Run', icon: '🧘‍♀️🏃‍♀️' },
     { label: 'Strength', icon: '💪' },
     { label: 'HIIT', icon: '🔥' },
     { label: 'Swimming', icon: '🏊‍♀️' },
@@ -38,50 +19,58 @@ export default function App() {
   ]
 
   const ashWorkoutOptions = [
-    { label: 'Rest Day', icon: '😴' },
+    { label: 'Rest', icon: '😴' },
     { label: 'Swim', icon: '🏊‍♂️' },
-    { label: 'Open Water Swim', icon: '🌊' },
+    { label: 'Open Water', icon: '🌊' },
     { label: 'Cycle', icon: '🚴‍♂️' },
     { label: 'Long Ride', icon: '🚴‍♂️💪' },
     { label: 'Run', icon: '🏃‍♂️' },
     { label: 'Long Run', icon: '🏃‍♂️💪' },
-    { label: 'Brick (Bike+Run)', icon: '🚴‍♂️🏃‍♂️' },
+    { label: 'Brick', icon: '🚴‍♂️🏃‍♂️' },
     { label: 'Strength', icon: '💪' },
     { label: 'Recovery', icon: '🧘‍♂️' }
   ]
 
-  const bigSessionLabels = ['Long Run', 'Long Ride', 'Brick (Bike+Run)', 'Open Water Swim']
+  const defaultLauraSchedule = {
+    monday: 'Rest', tuesday: 'Reformer Pilates', wednesday: 'Tempo Run',
+    thursday: 'Rest', friday: 'Pilates + Run', saturday: 'Long Run', sunday: 'Rest'
+  }
 
+  const defaultAshSchedule = {
+    monday: 'Rest', tuesday: 'Swim', wednesday: 'Cycle',
+    thursday: 'Run', friday: 'Swim', saturday: 'Long Ride', sunday: 'Long Run'
+  }
+
+  const bigSessions = ['Long Run', 'Long Ride', 'Brick', 'Open Water']
+
+  // All measurements are for 4 portions (2 dinner + 2 lunch next day)
   const initialRecipes = [
     { id: 'eating-out', name: 'Eating Out 🍽️', protein: 'none', prepTime: '0 min', isQuick: true, isSlowCooker: false, highCarb: false, ingredients: [], method: 'Enjoy your meal out!', notes: 'No cooking tonight', isEatingOut: true },
-    { id: 1, name: 'Slowcooker Mexican Pulled Beef Tacos', protein: 'beef', prepTime: '15 min', isQuick: false, isSlowCooker: true, highCarb: true, source: 'tiktok', ingredients: ['beef brisket', 'chipotle paste', 'cumin', 'smoked paprika', 'garlic', 'beef stock', 'lime', 'corn tortillas', 'red onion', 'coriander'], method: '1. Season beef\n2. Slow cook 6-8 hrs\n3. Shred and serve', notes: 'Add cheese separately for Ash' },
-    { id: 2, name: 'Chicken & Pepper Naked Fajitas', protein: 'chicken', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: false, source: 'homemade', ingredients: ['chicken breast', 'mixed peppers', 'onion', 'fajita seasoning', 'lime', 'rice', 'avocado'], method: '1. Slice chicken and veg\n2. Cook chicken\n3. Add peppers\n4. Serve with rice', notes: 'Add cheese on the side' },
-    { id: 3, name: 'Shepherds Pie', protein: 'beef', prepTime: '20 min', isQuick: false, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['lamb mince', 'onion', 'carrots', 'peas', 'beef stock', 'tomato puree', 'potatoes', 'olive oil'], method: '1. Brown mince\n2. Add veg and stock\n3. Top with mash\n4. Bake', notes: 'Use olive oil in mash for dairy-free' },
-    { id: 4, name: 'Slowcooker Red Thai Curry', protein: 'chicken', prepTime: '10 min', isQuick: false, isSlowCooker: true, highCarb: true, source: 'tiktok', ingredients: ['chicken thighs', 'red curry paste', 'coconut milk', 'bamboo shoots', 'red pepper', 'fish sauce', 'lime', 'jasmine rice'], method: '1. Add chicken and paste to slow cooker\n2. Add coconut milk and veg\n3. Cook 4-6 hrs\n4. Serve with rice', notes: 'Naturally dairy-free' },
-    { id: 5, name: 'Crispy Cod with Garlic Asparagus Risotto', protein: 'fish', prepTime: '5 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'tiktok', ingredients: ['cod fillets', 'arborio rice', 'asparagus', 'garlic', 'white wine', 'veg stock', 'lemon', 'olive oil'], method: '1. Start risotto\n2. Pan fry cod\n3. Add asparagus\n4. Finish with lemon', notes: 'Skip parmesan or add separately' },
-    { id: 6, name: 'Quick Beef Ragu with Pasta', protein: 'beef', prepTime: '5 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['beef mince', 'onion', 'garlic', 'tinned tomatoes', 'red wine', 'italian herbs', 'pasta'], method: '1. Brown mince\n2. Add tomatoes and wine\n3. Simmer\n4. Serve with pasta', notes: 'Add parmesan separately' },
-    { id: 7, name: 'Garlic Herb Roasted Chicken', protein: 'chicken', prepTime: '10 min', isQuick: false, isSlowCooker: false, highCarb: false, source: 'homemade', ingredients: ['chicken thighs', 'garlic', 'rosemary', 'thyme', 'lemon', 'broccoli', 'green beans', 'new potatoes'], method: '1. Marinate chicken\n2. Roast 45 mins\n3. Steam greens\n4. Serve', notes: 'Great weekend meal' },
-    { id: 8, name: 'Korean Beef Noodles', protein: 'beef', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'tiktok', ingredients: ['beef mince', 'gochujang', 'soy sauce', 'sesame oil', 'garlic', 'ginger', 'spring onions', 'egg noodles', 'cucumber'], method: '1. Brown beef\n2. Add sauce ingredients\n3. Cook noodles\n4. Combine and top', notes: 'Naturally dairy-free' },
-    { id: 9, name: 'Tuna Sweetcorn Jacket Potato', protein: 'fish', prepTime: '5 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['baking potatoes', 'tinned tuna', 'sweetcorn', 'dairy-free mayo', 'spring onions', 'lemon'], method: '1. Bake potatoes\n2. Mix tuna filling\n3. Fill and serve', notes: 'Use dairy-free mayo' },
-    { id: 10, name: 'Peanut Butter Thai Chicken Udon', protein: 'chicken', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'tiktok', ingredients: ['chicken breast', 'udon noodles', 'peanut butter', 'soy sauce', 'lime', 'chilli', 'garlic', 'pak choi', 'spring onions'], method: '1. Cook chicken\n2. Make peanut sauce\n3. Cook noodles and pak choi\n4. Combine', notes: 'Naturally dairy-free' },
-    { id: 11, name: 'Honey Garlic Salmon with Rice', protein: 'fish', prepTime: '5 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['salmon fillets', 'honey', 'soy sauce', 'garlic', 'ginger', 'jasmine rice', 'broccoli'], method: '1. Make glaze\n2. Pan fry salmon\n3. Serve with rice and broccoli', notes: 'Naturally dairy-free' },
-    { id: 12, name: 'Prawn Stir Fry', protein: 'fish', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['king prawns', 'stir fry veg', 'garlic', 'ginger', 'soy sauce', 'oyster sauce', 'egg noodles'], method: '1. Cook noodles\n2. Stir fry prawns\n3. Add veg and sauce\n4. Toss with noodles', notes: 'Super quick midweek meal' },
-    { id: 13, name: 'Chicken Gyros Bowl', protein: 'chicken', prepTime: '15 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['chicken thighs', 'oregano', 'paprika', 'cumin', 'garlic', 'lemon', 'pitta', 'cucumber', 'tomatoes', 'hummus'], method: '1. Marinate and grill chicken\n2. Warm pitta\n3. Assemble bowl', notes: 'Hummus instead of tzatziki' },
-    { id: 14, name: 'Teriyaki Chicken Rice Bowls', protein: 'chicken', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['chicken thighs', 'teriyaki sauce', 'jasmine rice', 'edamame', 'cucumber', 'spring onions'], method: '1. Cook rice\n2. Pan fry chicken with teriyaki\n3. Assemble bowls', notes: 'Great for meal prep' },
-    { id: 15, name: 'Lemon Herb Baked Cod', protein: 'fish', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['cod fillets', 'baby potatoes', 'cherry tomatoes', 'olives', 'capers', 'lemon', 'garlic'], method: '1. Roast potatoes\n2. Add cod and veg\n3. Bake 10 more mins', notes: 'One tray meal' },
-    { id: 16, name: 'Sausage & Bean Casserole', protein: 'pork', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['pork sausages', 'cannellini beans', 'tinned tomatoes', 'onion', 'garlic', 'smoked paprika', 'crusty bread'], method: '1. Brown sausages\n2. Add beans and tomatoes\n3. Simmer\n4. Serve with bread', notes: 'Check sausages are dairy-free' },
-    { id: 17, name: 'Chicken Burrito Bowls', protein: 'chicken', prepTime: '15 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['chicken breast', 'cumin', 'paprika', 'rice', 'black beans', 'sweetcorn', 'avocado', 'lime', 'salsa'], method: '1. Season and cook chicken\n2. Cook rice\n3. Assemble bowls', notes: 'Add cheese on yours separately' },
-    { id: 18, name: 'Mediterranean Tuna Pasta', protein: 'fish', prepTime: '5 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['pasta', 'tinned tuna', 'cherry tomatoes', 'olives', 'capers', 'garlic', 'olive oil', 'rocket'], method: '1. Cook pasta\n2. Warm oil with garlic\n3. Add tuna and veg\n4. Toss with pasta', notes: 'Quick storecupboard meal' },
-    { id: 19, name: 'Slowcooker Chicken Cacciatore', protein: 'chicken', prepTime: '15 min', isQuick: false, isSlowCooker: true, highCarb: true, source: 'homemade', ingredients: ['chicken thighs', 'tinned tomatoes', 'peppers', 'onion', 'garlic', 'olives', 'white wine', 'italian herbs', 'pasta'], method: '1. Add everything to slow cooker\n2. Cook 4-6 hrs\n3. Serve with pasta', notes: 'Italian comfort food' },
-    { id: 20, name: 'Ginger Soy Glazed Salmon Noodles', protein: 'fish', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', ingredients: ['salmon fillets', 'soy sauce', 'ginger', 'honey', 'rice noodles', 'pak choi', 'spring onions', 'lime'], method: '1. Make glaze\n2. Pan fry salmon\n3. Cook noodles\n4. Serve together', notes: 'Naturally dairy-free' }
+    { id: 1, name: 'Mexican Pulled Beef Tacos', protein: 'beef', prepTime: '15 min', isQuick: false, isSlowCooker: true, highCarb: true, source: 'tiktok', tiktokUrl: '', ingredients: ['1kg beef brisket', '4 tbsp chipotle paste', '2 tsp cumin', '2 tsp smoked paprika', '6 cloves garlic, minced', '500ml beef stock', '2 limes, juiced', '16 corn tortillas', '2 red onions, diced'], method: '1. Season beef with spices\n2. Place in slow cooker with stock\n3. Cook on low 6-8 hrs\n4. Shred with forks\n5. Serve in tortillas with onion', notes: 'Add cheese separately for Laura' },
+    { id: 2, name: 'Chicken & Pepper Fajitas', protein: 'chicken', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: false, source: 'homemade', tiktokUrl: '', ingredients: ['1kg chicken breast, sliced', '4 mixed peppers, sliced', '2 large onions, sliced', '4 tbsp fajita seasoning', '2 limes, juiced', '500g rice', '2 avocados, sliced'], method: '1. Cook rice according to packet\n2. Fry chicken 5-6 mins until golden\n3. Add peppers and onion, cook 4 mins\n4. Add seasoning and lime\n5. Serve over rice with avocado', notes: 'Add cheese on the side for Laura' },
+    { id: 3, name: 'Shepherds Pie', protein: 'beef', prepTime: '20 min', isQuick: false, isSlowCooker: false, highCarb: true, source: 'homemade', tiktokUrl: '', ingredients: ['1kg lamb mince', '2 onions, diced', '4 carrots, diced', '300g frozen peas', '600ml beef stock', '4 tbsp tomato puree', '1.6kg potatoes, peeled and cubed', '6 tbsp olive oil', 'Salt and pepper'], method: '1. Boil potatoes 15 mins, drain and mash with olive oil\n2. Brown mince, add onion and carrots\n3. Add stock and puree, simmer 15 mins\n4. Add peas, transfer to dish\n5. Top with mash, bake 200°C 25 mins', notes: 'Use olive oil in mash for dairy-free' },
+    { id: 4, name: 'Thai Red Curry', protein: 'chicken', prepTime: '10 min', isQuick: false, isSlowCooker: true, highCarb: true, source: 'tiktok', tiktokUrl: '', ingredients: ['1.2kg chicken thighs, cubed', '6 tbsp red curry paste', '800ml coconut milk', '400g bamboo shoots, drained', '2 red peppers, sliced', '4 tbsp fish sauce', '2 limes, juiced', '600g jasmine rice'], method: '1. Add chicken and curry paste to slow cooker\n2. Pour in coconut milk, add bamboo shoots and pepper\n3. Cook on low 4-6 hrs\n4. Stir in fish sauce and lime\n5. Serve with jasmine rice', notes: 'Naturally dairy-free' },
+    { id: 5, name: 'Crispy Cod Risotto', protein: 'fish', prepTime: '5 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'tiktok', tiktokUrl: '', ingredients: ['4 cod fillets (150g each)', '600g arborio rice', '400g asparagus, trimmed and chopped', '8 cloves garlic, minced', '200ml white wine', '1.6L veg stock, warm', '4 tbsp olive oil', 'Salt and pepper'], method: '1. Heat oil, toast rice 2 mins\n2. Add wine, stir until absorbed\n3. Add stock gradually, stirring 18 mins\n4. Season cod, pan fry 4 mins each side\n5. Add asparagus and garlic to risotto last 3 mins\n6. Serve cod on risotto', notes: 'Skip parmesan or add separately for Laura' },
+    { id: 6, name: 'Beef Ragu Pasta', protein: 'beef', prepTime: '5 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', tiktokUrl: '', ingredients: ['1kg beef mince', '2 onions, diced', '6 cloves garlic, minced', '800g tinned tomatoes', '200ml red wine', '2 tsp italian herbs', '800g pasta', 'Salt and pepper'], method: '1. Brown mince in large pan, drain fat\n2. Add onion and garlic, cook 3 mins\n3. Add tomatoes, wine and herbs\n4. Simmer 15 mins\n5. Cook pasta, drain and combine', notes: 'Add parmesan separately for Laura' },
+    { id: 7, name: 'Garlic Herb Roast Chicken', protein: 'chicken', prepTime: '10 min', isQuick: false, isSlowCooker: false, highCarb: false, source: 'homemade', tiktokUrl: '', ingredients: ['12 chicken thighs', '12 cloves garlic, minced', '4 sprigs rosemary, chopped', '8 sprigs thyme', '400g broccoli florets', '400g green beans, trimmed', '1kg new potatoes, halved', '6 tbsp olive oil', 'Salt and pepper'], method: '1. Mix garlic, herbs and oil, coat chicken\n2. Arrange chicken and potatoes on tray\n3. Roast 200°C 35 mins\n4. Add broccoli and beans, roast 10 more mins\n5. Serve together', notes: 'Great weekend meal' },
+    { id: 8, name: 'Korean Beef Noodles', protein: 'beef', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'tiktok', tiktokUrl: '', ingredients: ['1kg beef mince', '6 tbsp gochujang', '6 tbsp soy sauce', '2 tbsp sesame oil', '8 cloves garlic, minced', '4cm ginger, grated', '8 spring onions, sliced', '600g egg noodles', '2 cucumbers, sliced'], method: '1. Brown beef mince, drain fat\n2. Add gochujang, soy, sesame oil, garlic, ginger\n3. Cook 3 mins until sticky\n4. Cook noodles according to packet\n5. Serve beef over noodles with cucumber and spring onions', notes: 'Naturally dairy-free' },
+    { id: 9, name: 'Tuna Jacket Potatoes', protein: 'fish', prepTime: '5 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', tiktokUrl: '', ingredients: ['8 large baking potatoes', '4 tins tuna, drained (145g each)', '2 tins sweetcorn, drained (200g each)', '8 tbsp dairy-free mayo', '8 spring onions, sliced', 'Salt and pepper'], method: '1. Pierce potatoes, microwave 10 mins each (or bake 200°C 1 hr)\n2. Mix tuna, sweetcorn, mayo and spring onions\n3. Season with salt and pepper\n4. Split potatoes and fill with tuna mix', notes: 'Use dairy-free mayo' },
+    { id: 10, name: 'Peanut Thai Chicken Udon', protein: 'chicken', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'tiktok', tiktokUrl: '', ingredients: ['800g chicken breast, sliced', '600g udon noodles', '6 tbsp peanut butter', '4 tbsp soy sauce', '2 limes, juiced', '2 tsp chilli flakes', '6 cloves garlic, minced', '4 pak choi, quartered', '8 spring onions, sliced'], method: '1. Fry chicken 5-6 mins until cooked\n2. Mix peanut butter, soy, lime, chilli and 6 tbsp water\n3. Cook noodles and pak choi according to packet\n4. Add sauce to chicken, warm through\n5. Serve over noodles, top with spring onions', notes: 'Naturally dairy-free' },
+    { id: 11, name: 'Honey Garlic Salmon', protein: 'fish', prepTime: '5 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', tiktokUrl: '', ingredients: ['4 salmon fillets (150g each)', '6 tbsp honey', '4 tbsp soy sauce', '6 cloves garlic, minced', '2cm ginger, grated', '600g jasmine rice', '400g broccoli florets'], method: '1. Cook rice according to packet\n2. Mix honey, soy, garlic and ginger\n3. Pan fry salmon skin-down 3 mins\n4. Flip, add sauce, cook 3 mins basting\n5. Steam broccoli 4 mins\n6. Serve salmon on rice with broccoli', notes: 'Naturally dairy-free' },
+    { id: 12, name: 'Prawn Stir Fry', protein: 'fish', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', tiktokUrl: '', ingredients: ['800g king prawns', '600g stir fry veg (2 bags)', '6 cloves garlic, minced', '4cm ginger, grated', '6 tbsp soy sauce', '4 tbsp oyster sauce', '600g egg noodles', '2 tbsp vegetable oil'], method: '1. Cook noodles according to packet\n2. Heat oil, fry prawns 2 mins each side\n3. Add garlic, ginger, veg, cook 3 mins\n4. Add sauces and noodles, toss together\n5. Serve immediately', notes: 'Super quick midweek meal' },
+    { id: 13, name: 'Chicken Gyros Bowl', protein: 'chicken', prepTime: '15 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', tiktokUrl: '', ingredients: ['1kg chicken thighs, sliced', '2 tsp oregano', '2 tsp paprika', '2 tsp cumin', '6 cloves garlic, minced', '8 pitta breads', '2 cucumbers, diced', '400g cherry tomatoes, halved', '400g hummus'], method: '1. Mix chicken with oregano, paprika, cumin, garlic\n2. Fry chicken 6-8 mins until cooked\n3. Warm pitta breads\n4. Serve chicken with pitta, cucumber, tomatoes and hummus', notes: 'Hummus instead of tzatziki for dairy-free' },
+    { id: 14, name: 'Teriyaki Chicken Bowls', protein: 'chicken', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', tiktokUrl: '', ingredients: ['1kg chicken thighs, cubed', '8 tbsp teriyaki sauce', '600g jasmine rice', '300g edamame beans', '2 cucumbers, sliced', '8 spring onions, sliced', '2 tbsp sesame seeds'], method: '1. Cook rice according to packet\n2. Fry chicken 6-8 mins until golden\n3. Add teriyaki sauce, cook 2 mins until sticky\n4. Cook edamame 3 mins in boiling water\n5. Assemble bowls: rice, chicken, edamame, cucumber\n6. Top with spring onions and sesame seeds', notes: 'Great for meal prep' },
+    { id: 16, name: 'Sausage & Bean Casserole', protein: 'pork', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', tiktokUrl: '', ingredients: ['16 pork sausages', '800g tinned cannellini beans, drained', '800g tinned tomatoes', '2 onions, sliced', '6 cloves garlic, minced', '2 tsp smoked paprika', '8 slices crusty bread', '2 tbsp olive oil'], method: '1. Brown sausages in oil 5 mins, set aside\n2. Fry onion and garlic 3 mins\n3. Add beans, tomatoes, paprika\n4. Return sausages, simmer 15 mins\n5. Serve with crusty bread', notes: 'Check sausages are dairy-free' },
+    { id: 17, name: 'Chicken Burrito Bowls', protein: 'chicken', prepTime: '15 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', tiktokUrl: '', ingredients: ['1kg chicken breast, sliced', '2 tsp cumin', '2 tsp paprika', '600g rice', '800g tinned black beans, drained', '400g sweetcorn', '4 avocados, sliced', '2 limes, juiced', '8 tbsp salsa'], method: '1. Season chicken with cumin and paprika\n2. Cook rice according to packet\n3. Fry chicken 6-8 mins\n4. Warm beans and sweetcorn\n5. Assemble bowls: rice, chicken, beans, corn, avocado\n6. Top with lime juice and salsa', notes: 'Add cheese on yours separately for Laura' },
+    { id: 20, name: 'Ginger Soy Salmon Noodles', protein: 'fish', prepTime: '10 min', isQuick: true, isSlowCooker: false, highCarb: true, source: 'homemade', tiktokUrl: '', ingredients: ['4 salmon fillets (150g each)', '6 tbsp soy sauce', '4cm ginger, grated', '4 tbsp honey', '600g rice noodles', '4 pak choi, quartered', '8 spring onions, sliced', '2 limes, to serve'], method: '1. Mix soy, ginger and honey for glaze\n2. Cook noodles according to packet, add pak choi last 2 mins\n3. Pan fry salmon 3 mins each side\n4. Add glaze, cook 1 min until sticky\n5. Serve salmon on noodles\n6. Top with spring onions', notes: 'Naturally dairy-free' }
   ]
 
-  const [activeTab, setActiveTab] = useState('planner')
+  const [activeTab, setActiveTab] = useState('meals')
   const [recipes, setRecipes] = useState(initialRecipes)
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0)
   const [weekPlans, setWeekPlans] = useState({ 0: {} })
-  const [lauraTraining, setLauraTraining] = useState({ 0: lauraDefaultTraining })
-  const [ashTraining, setAshTraining] = useState({ 0: ashDefaultTraining })
+  const [lauraSchedule, setLauraSchedule] = useState(defaultLauraSchedule)
+  const [ashSchedule, setAshSchedule] = useState(defaultAshSchedule)
   const [checkedItems, setCheckedItems] = useState({})
   const [selectedDay, setSelectedDay] = useState(null)
   const [editingWorkout, setEditingWorkout] = useState(null)
@@ -91,19 +80,24 @@ export default function App() {
   const [filterProtein, setFilterProtein] = useState('all')
   const [savedPlan, setSavedPlan] = useState(true)
   const [loading, setLoading] = useState(true)
-  const [newRecipe, setNewRecipe] = useState({ name: '', protein: 'chicken', prepTime: '', isQuick: true, isSlowCooker: false, highCarb: false, source: 'tiktok', ingredients: '', method: '', notes: '' })
+  const [newRecipe, setNewRecipe] = useState({ name: '', protein: 'chicken', prepTime: '', isQuick: true, isSlowCooker: false, highCarb: false, source: 'tiktok', tiktokUrl: '', ingredients: '', method: '', notes: '' })
 
   const weekPlan = weekPlans[currentWeekOffset] || {}
-  const weekLauraTraining = lauraTraining[currentWeekOffset] || lauraDefaultTraining
-  const weekAshTraining = ashTraining[currentWeekOffset] || ashDefaultTraining
 
   const needsHighCarb = (day) => {
     const dayIndex = days.indexOf(day)
-    const nextDayIndex = (dayIndex + 1) % 7
-    const nextDay = days[nextDayIndex]
-    const lauraNextDay = weekLauraTraining[nextDay]?.label
-    const ashNextDay = weekAshTraining[nextDay]?.label
-    return bigSessionLabels.includes(lauraNextDay) || bigSessionLabels.includes(ashNextDay)
+    const nextDay = days[(dayIndex + 1) % 7]
+    return bigSessions.includes(lauraSchedule[nextDay]) || bigSessions.includes(ashSchedule[nextDay])
+  }
+
+  const getPreviousDinner = (day) => {
+    const dayIndex = days.indexOf(day)
+    const prevDay = days[(dayIndex - 1 + 7) % 7]
+    const recipeId = weekPlan[prevDay]
+    if (recipeId && recipeId !== 'eating-out') {
+      return recipes.find(r => r.id === recipeId)
+    }
+    return null
   }
 
   useEffect(() => {
@@ -121,15 +115,10 @@ export default function App() {
         }
         const { data: trainingData } = await supabase.from('training').select('*')
         if (trainingData && trainingData.length > 0) {
-          const laura = {}
-          const ash = {}
           trainingData.forEach(tr => {
-            if (tr.laura_schedule) laura[tr.week_offset] = tr.laura_schedule
-            if (tr.ash_schedule) ash[tr.week_offset] = tr.ash_schedule
-            if (tr.schedule && !tr.laura_schedule) laura[tr.week_offset] = tr.schedule
+            if (tr.laura_default) setLauraSchedule(tr.laura_default)
+            if (tr.ash_default) setAshSchedule(tr.ash_default)
           })
-          if (Object.keys(laura).length > 0) setLauraTraining(laura)
-          if (Object.keys(ash).length > 0) setAshTraining(ash)
         }
       } catch (e) {
         console.log('Load error, using defaults', e)
@@ -139,13 +128,6 @@ export default function App() {
     loadData()
   }, [])
 
-  const getWeekLabel = (offset) => {
-    if (offset === 0) return 'This Week'
-    if (offset === 1) return 'Next Week'
-    if (offset === -1) return 'Last Week'
-    return `Week ${offset > 0 ? '+' : ''}${offset}`
-  }
-
   const getWeekDates = (offset) => {
     const today = new Date()
     const day = today.getDay()
@@ -154,7 +136,16 @@ export default function App() {
     monday.setDate(today.getDate() + diff + offset * 7)
     const sunday = new Date(monday)
     sunday.setDate(monday.getDate() + 6)
-    return `${monday.getDate()} ${monday.toLocaleString('en-GB', { month: 'short' })} - ${sunday.getDate()} ${sunday.toLocaleString('en-GB', { month: 'short' })}`
+    const formatDate = (d) => `${d.toLocaleString('en-GB', { month: 'short' })} ${d.getDate()}`
+    return { start: monday, end: sunday, label: `${formatDate(monday)} - ${formatDate(sunday)}, ${monday.getFullYear()}` }
+  }
+
+  const getDayDate = (day, offset) => {
+    const { start } = getWeekDates(offset)
+    const dayIndex = days.indexOf(day)
+    const date = new Date(start)
+    date.setDate(start.getDate() + dayIndex)
+    return date.getDate()
   }
 
   const assignRecipe = (day, recipeId) => {
@@ -168,17 +159,11 @@ export default function App() {
     setSavedPlan(false)
   }
 
-  const updateWorkout = (day, person, workout) => {
+  const updateDefaultSchedule = (person, day, workout) => {
     if (person === 'laura') {
-      setLauraTraining(prev => ({
-        ...prev,
-        [currentWeekOffset]: { ...(prev[currentWeekOffset] || lauraDefaultTraining), [day]: workout }
-      }))
+      setLauraSchedule(prev => ({ ...prev, [day]: workout }))
     } else {
-      setAshTraining(prev => ({
-        ...prev,
-        [currentWeekOffset]: { ...(prev[currentWeekOffset] || ashDefaultTraining), [day]: workout }
-      }))
+      setAshSchedule(prev => ({ ...prev, [day]: workout }))
     }
     setEditingWorkout(null)
     setSavedPlan(false)
@@ -195,13 +180,9 @@ export default function App() {
         return r && (r.protein === 'beef' || r.protein === 'pork')
       }).length
       let pool = recipes.filter(r => !used.has(r.id) && !r.isEatingOut)
-      if (redMeatCount >= 1) {
-        pool = pool.filter(r => r.protein !== 'beef' && r.protein !== 'pork')
-      }
+      if (redMeatCount >= 1) pool = pool.filter(r => r.protein !== 'beef' && r.protein !== 'pork')
       const healthyPool = pool.filter(r => r.protein === 'chicken' || r.protein === 'fish')
-      if (healthyPool.length > 0 && Math.random() < 0.7) {
-        pool = healthyPool
-      }
+      if (healthyPool.length > 0 && Math.random() < 0.7) pool = healthyPool
       if (!isWeekend) pool = pool.filter(r => r.isQuick)
       if (highCarbNeeded) {
         const hc = pool.filter(r => r.highCarb)
@@ -217,27 +198,12 @@ export default function App() {
     setSavedPlan(false)
   }
 
-  const clearWeek = () => {
-    setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: {} }))
-    setSavedPlan(false)
-  }
-
   const savePlan = async () => {
     try {
-      await supabase.from('week_plans').upsert({
-        week_offset: currentWeekOffset,
-        plan: weekPlan,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'week_offset' })
-      await supabase.from('training').upsert({
-        week_offset: currentWeekOffset,
-        laura_schedule: weekLauraTraining,
-        ash_schedule: weekAshTraining,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'week_offset' })
+      await supabase.from('week_plans').upsert({ week_offset: currentWeekOffset, plan: weekPlan, updated_at: new Date().toISOString() }, { onConflict: 'week_offset' })
+      await supabase.from('training').upsert({ week_offset: 0, laura_default: lauraSchedule, ash_default: ashSchedule, updated_at: new Date().toISOString() }, { onConflict: 'week_offset' })
       setSavedPlan(true)
     } catch (e) {
-      console.log('Save error', e)
       alert('Failed to save - check your connection')
     }
   }
@@ -247,9 +213,7 @@ export default function App() {
     Object.values(weekPlan).forEach(id => {
       const recipe = recipes.find(r => r.id === id)
       if (recipe && !recipe.isEatingOut) {
-        recipe.ingredients.forEach(ing => {
-          items[ing] = (items[ing] || 0) + 1
-        })
+        recipe.ingredients.forEach(ing => { items[ing] = (items[ing] || 0) + 1 })
       }
     })
     return Object.entries(items).map(([name, count]) => count > 1 ? `${name} (x${count})` : name)
@@ -258,211 +222,270 @@ export default function App() {
   const copyShoppingList = () => {
     const items = getShoppingList()
     const meals = days.map(d => weekPlan[d] ? `${d}: ${recipes.find(r => r.id === weekPlan[d])?.name}` : null).filter(Boolean)
-    const text = `🛒 Shopping List - ${getWeekDates(currentWeekOffset)}\n\n${items.map(i => `☐ ${i}`).join('\n')}\n\n📅 Meals:\n${meals.join('\n')}`
+    const text = `🛒 Shopping List - ${getWeekDates(currentWeekOffset).label}\n\n${items.map(i => `☐ ${i}`).join('\n')}\n\n📅 Meals:\n${meals.join('\n')}`
     navigator.clipboard.writeText(text)
     setCopiedList(true)
     setTimeout(() => setCopiedList(false), 2000)
   }
 
   const addRecipe = async () => {
-    const recipe = {
-      id: Date.now(),
-      ...newRecipe,
-      ingredients: newRecipe.ingredients.split('\n').filter(i => i.trim())
-    }
+    const recipe = { id: Date.now(), ...newRecipe, ingredients: newRecipe.ingredients.split('\n').filter(i => i.trim()) }
     try {
       await supabase.from('recipes').insert(recipe)
       setRecipes(prev => [...prev, recipe])
     } catch (e) {
-      console.log('Add recipe error', e)
       setRecipes(prev => [...prev, recipe])
     }
     setShowAddRecipe(false)
-    setNewRecipe({ name: '', protein: 'chicken', prepTime: '', isQuick: true, isSlowCooker: false, highCarb: false, source: 'tiktok', ingredients: '', method: '', notes: '' })
+    setNewRecipe({ name: '', protein: 'chicken', prepTime: '', isQuick: true, isSlowCooker: false, highCarb: false, source: 'tiktok', tiktokUrl: '', ingredients: '', method: '', notes: '' })
   }
 
   const deleteRecipe = async (id) => {
-    try {
-      await supabase.from('recipes').delete().eq('id', id)
-    } catch (e) {
-      console.log('Delete error', e)
-    }
+    try { await supabase.from('recipes').delete().eq('id', id) } catch (e) {}
     setRecipes(prev => prev.filter(r => r.id !== id))
     setViewingRecipe(null)
   }
 
-  const proteinCounts = { chicken: 0, fish: 0, redMeat: 0 }
-  Object.values(weekPlan).forEach(id => {
-    const r = recipes.find(rec => rec.id === id)
-    if (r && !r.isEatingOut) {
-      if (r.protein === 'chicken') proteinCounts.chicken++
-      else if (r.protein === 'fish') proteinCounts.fish++
-      else if (r.protein === 'beef' || r.protein === 'pork') proteinCounts.redMeat++
-    }
-  })
-
   const filteredRecipes = (filterProtein === 'all' ? recipes : recipes.filter(r => r.protein === filterProtein)).filter(r => !r.isEatingOut)
   const shoppingItems = getShoppingList()
+  const weekDates = getWeekDates(currentWeekOffset)
+
+  const getWorkoutIcon = (label) => {
+    const all = [...lauraWorkoutOptions, ...ashWorkoutOptions]
+    return all.find(w => w.label === label)?.icon || '📋'
+  }
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif', background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🥗</div>
-          <div>Loading...</div>
+          <div style={{ color: '#7c3aed' }}>Loading...</div>
         </div>
       </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#faf9f7', fontFamily: 'system-ui, sans-serif' }}>
-      <header style={{ background: 'white', borderBottom: '1px solid #eee', padding: '16px 24px' }}>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>🥗 Meal Prep</h1>
-        <p style={{ margin: '4px 0 0', color: '#666', fontSize: 14 }}>Weekly planning for Laura & Ash • Budget: £100/week</p>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #f5f3ff 0%, #faf5ff 50%, #fff 100%)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      {/* Header */}
+      <header style={{ background: 'white', borderBottom: '1px solid #e9d5ff', padding: '16px 20px', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#7c3aed' }}>🥗 Meal Plan</h1>
+            <p style={{ margin: '2px 0 0', color: '#a78bfa', fontSize: 13 }}>Laura & Ash • £100/week</p>
+          </div>
+          <button onClick={savePlan} style={{ padding: '10px 20px', background: savedPlan ? '#22c55e' : '#7c3aed', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14, boxShadow: '0 2px 8px rgba(124,58,237,0.3)' }}>
+            {savedPlan ? '✓ Saved' : '💾 Save'}
+          </button>
+        </div>
       </header>
 
-      <nav style={{ background: 'white', borderBottom: '1px solid #eee', padding: '0 24px', display: 'flex', gap: 8 }}>
-        {['planner', 'recipes', 'shopping'].map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              padding: '12px 20px',
-              border: 'none',
-              background: 'none',
-              fontSize: 14,
-              fontWeight: 500,
-              color: activeTab === tab ? '#1a1a1a' : '#666',
-              borderBottom: activeTab === tab ? '2px solid #e07a5f' : '2px solid transparent',
-              cursor: 'pointer'
-            }}
-          >
-            {tab === 'planner' && '📅 Week Planner'}
-            {tab === 'recipes' && `📖 Recipes (${recipes.length - 1})`}
-            {tab === 'shopping' && '🛒 Shopping List'}
-          </button>
-        ))}
+      {/* Tabs */}
+      <nav style={{ background: 'white', borderBottom: '1px solid #e9d5ff', padding: '0 20px', position: 'sticky', top: 73, zIndex: 50 }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', gap: 0 }}>
+          {[{ id: 'meals', label: '🍽️ Meals' }, { id: 'training', label: '💪 Training' }, { id: 'recipes', label: '📖 Recipes' }, { id: 'list', label: '🛒 List' }].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: '14px 16px',
+                border: 'none',
+                background: 'none',
+                fontSize: 14,
+                fontWeight: 500,
+                color: activeTab === tab.id ? '#7c3aed' : '#9ca3af',
+                borderBottom: activeTab === tab.id ? '3px solid #7c3aed' : '3px solid transparent',
+                cursor: 'pointer'
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </nav>
 
-      <main style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
-        {activeTab === 'planner' && (
+      <main style={{ maxWidth: 900, margin: '0 auto', padding: '20px 16px' }}>
+        {/* MEALS TAB */}
+        {activeTab === 'meals' && (
           <>
-            <div style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button onClick={() => setCurrentWeekOffset(o => o - 1)} style={{ padding: '8px 16px', border: '1px solid #ddd', borderRadius: 6, background: 'white', cursor: 'pointer' }}>← Prev</button>
+            {/* Week Navigation */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <button onClick={() => setCurrentWeekOffset(o => o - 1)} style={{ width: 44, height: 44, border: '1px solid #e9d5ff', borderRadius: 12, background: 'white', cursor: 'pointer', fontSize: 18 }}>‹</button>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontWeight: 600 }}>{getWeekLabel(currentWeekOffset)}</div>
-                <div style={{ fontSize: 13, color: '#666' }}>{getWeekDates(currentWeekOffset)}</div>
+                <div style={{ fontWeight: 600, fontSize: 16, color: '#1f2937' }}>{weekDates.label}</div>
               </div>
-              <button onClick={() => setCurrentWeekOffset(o => o + 1)} style={{ padding: '8px 16px', border: '1px solid #ddd', borderRadius: 6, background: 'white', cursor: 'pointer' }}>Next →</button>
+              <button onClick={() => setCurrentWeekOffset(o => o + 1)} style={{ width: 44, height: 44, border: '1px solid #e9d5ff', borderRadius: 12, background: 'white', cursor: 'pointer', fontSize: 18 }}>›</button>
             </div>
 
-            <div style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <div style={{ display: 'flex', gap: 12, fontSize: 13 }}>
-                <span>🐔 Chicken: {proteinCounts.chicken}</span>
-                <span>🐟 Fish: {proteinCounts.fish}</span>
-                <span style={{ color: proteinCounts.redMeat > 1 ? '#dc2626' : 'inherit' }}>🥩 Red meat: {proteinCounts.redMeat}/1{proteinCounts.redMeat > 1 && ' ⚠️'}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={generatePlan} style={{ padding: '8px 16px', background: '#e07a5f', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>✨ Generate Plan</button>
-                <button onClick={savePlan} style={{ padding: '8px 16px', background: savedPlan ? '#22c55e' : '#3b82f6', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>
-                  {savedPlan ? '✓ Saved!' : '💾 Save Plan'}
-                </button>
-                <button onClick={clearWeek} style={{ padding: '8px 16px', background: '#f5f5f5', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Clear Week</button>
-              </div>
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
+              <button onClick={generatePlan} style={{ padding: '12px 20px', background: '#7c3aed', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 2px 8px rgba(124,58,237,0.3)' }}>
+                📅 Build from Workouts
+              </button>
+              <button onClick={copyShoppingList} style={{ padding: '12px 20px', background: 'white', color: '#7c3aed', border: '1px solid #e9d5ff', borderRadius: 10, cursor: 'pointer', fontWeight: 500, fontSize: 14 }}>
+                {copiedList ? '✓ Copied!' : '📋 Copy to Notes'}
+              </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            {/* Day Selector */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 24, overflowX: 'auto', paddingBottom: 4 }}>
               {days.map(day => {
-                const lauraWorkout = weekLauraTraining[day] || lauraDefaultTraining[day]
-                const ashWorkout = weekAshTraining[day] || ashDefaultTraining[day]
-                const recipeId = weekPlan[day]
-                const recipe = recipeId ? recipes.find(r => r.id === recipeId) : null
-                const highCarb = needsHighCarb(day)
-
+                const isToday = getDayDate(day, currentWeekOffset) === new Date().getDate() && currentWeekOffset === 0
                 return (
-                  <div key={day} style={{ background: 'white', borderRadius: 12, padding: 16, border: '1px solid #eee' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                      <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, textTransform: 'capitalize' }}>{day}</h3>
-                      {highCarb && (
-                        <span style={{ fontSize: 11, background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10, height: 'fit-content' }}>🍝 High Carb</span>
-                      )}
+                  <div key={day} style={{ textAlign: 'center', minWidth: 44 }}>
+                    <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 4 }}>{dayLabels[day]}</div>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: isToday ? '#7c3aed' : 'white', color: isToday ? 'white' : '#1f2937', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 14, border: isToday ? 'none' : '1px solid #e9d5ff', margin: '0 auto' }}>
+                      {getDayDate(day, currentWeekOffset)}
                     </div>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12, fontSize: 13 }}>
-                      <div
-                        onClick={() => setEditingWorkout({ day, person: 'laura' })}
-                        style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '4px 8px', marginLeft: -8, borderRadius: 6, background: '#fdf2f8' }}
-                      >
-                        <span style={{ fontWeight: 500, color: '#be185d', minWidth: 45 }}>Laura</span>
-                        <span>{lauraWorkout.icon}</span>
-                        <span style={{ color: '#666' }}>{lauraWorkout.label}</span>
-                        <span style={{ fontSize: 10, color: '#999', marginLeft: 'auto' }}>✎</span>
-                      </div>
-                      <div
-                        onClick={() => setEditingWorkout({ day, person: 'ash' })}
-                        style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '4px 8px', marginLeft: -8, borderRadius: 6, background: '#eff6ff' }}
-                      >
-                        <span style={{ fontWeight: 500, color: '#1d4ed8', minWidth: 45 }}>Ash</span>
-                        <span>{ashWorkout.icon}</span>
-                        <span style={{ color: '#666' }}>{ashWorkout.label}</span>
-                        <span style={{ fontSize: 10, color: '#999', marginLeft: 'auto' }}>✎</span>
-                      </div>
-                    </div>
-
-                    {recipe ? (
-                      <div 
-                        onClick={() => setViewingRecipe(recipe)}
-                        style={{ background: '#faf9f7', borderRadius: 8, padding: 12, cursor: 'pointer' }}
-                      >
-                        <div style={{ fontWeight: 500, fontSize: 14 }}>{recipe.name}</div>
-                        <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>⏱ {recipe.prepTime} • Click for recipe</div>
-                        <button onClick={(e) => { e.stopPropagation(); clearDay(day); }} style={{ marginTop: 8, background: 'none', border: 'none', color: '#999', fontSize: 12, cursor: 'pointer' }}>✕ Remove</button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setSelectedDay(day)}
-                        style={{ width: '100%', padding: 20, border: '2px dashed #ddd', borderRadius: 8, background: 'transparent', color: '#999', cursor: 'pointer' }}
-                      >
-                        + Add meal
-                      </button>
-                    )}
-
-                    {highCarb && (
-                      <div style={{ marginTop: 8, padding: 8, background: '#fef3c7', borderRadius: 6, fontSize: 11, color: '#92400e' }}>
-                        💡 High carb for tomorrow's big session
-                      </div>
-                    )}
                   </div>
                 )
               })}
             </div>
+
+            {/* Day Cards */}
+            {days.map(day => {
+              const recipeId = weekPlan[day]
+              const dinner = recipeId ? recipes.find(r => r.id === recipeId) : null
+              const lunch = getPreviousDinner(day)
+              const highCarb = needsHighCarb(day)
+              const lauraWorkout = lauraSchedule[day]
+              const ashWorkout = ashSchedule[day]
+
+              return (
+                <div key={day} style={{ background: 'white', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 2px 12px rgba(124,58,237,0.08)', border: '1px solid #f3e8ff' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div>
+                      <span style={{ fontWeight: 700, fontSize: 18, textTransform: 'capitalize', color: '#1f2937' }}>{day}</span>
+                      <span style={{ color: '#9ca3af', marginLeft: 8, fontSize: 14 }}>
+                        ({lauraWorkout}, {ashWorkout})
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: highCarb ? '#fef3c7' : '#dcfce7', color: highCarb ? '#92400e' : '#166534', fontWeight: 500 }}>
+                      {highCarb ? '🍝 High Carbs' : '🥗 Low Carbs'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                    {/* Lunch (Leftovers) */}
+                    <div style={{ background: lunch ? '#f0fdf4' : '#f9fafb', borderRadius: 12, padding: 16, border: lunch ? '1px solid #bbf7d0' : '1px solid #e5e7eb' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#22c55e', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        ☀️ LUNCH
+                      </div>
+                      {lunch ? (
+                        <>
+                          <div style={{ fontWeight: 600, fontSize: 15, color: '#1f2937' }}>{lunch.name}</div>
+                          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>(leftover)</div>
+                        </>
+                      ) : (
+                        <div style={{ color: '#9ca3af', fontSize: 13 }}>No leftovers</div>
+                      )}
+                    </div>
+
+                    {/* Dinner */}
+                    <div 
+                      onClick={() => dinner ? setViewingRecipe(dinner) : setSelectedDay(day)}
+                      style={{ background: dinner ? '#f5f3ff' : '#fafafa', borderRadius: 12, padding: 16, border: dinner ? '1px solid #ddd6fe' : '2px dashed #d1d5db', cursor: 'pointer' }}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#7c3aed', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        🌙 DINNER
+                      </div>
+                      {dinner ? (
+                        <>
+                          <div style={{ fontWeight: 600, fontSize: 15, color: '#1f2937' }}>{dinner.name}</div>
+                          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Makes 4 portions</div>
+                          <button onClick={(e) => { e.stopPropagation(); clearDay(day); }} style={{ marginTop: 8, background: 'none', border: 'none', color: '#9ca3af', fontSize: 12, cursor: 'pointer' }}>✕ Remove</button>
+                        </>
+                      ) : (
+                        <div style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', padding: '8px 0' }}>+ Add meal</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </>
         )}
 
+        {/* TRAINING TAB */}
+        {activeTab === 'training' && (
+          <>
+            <div style={{ background: 'white', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 2px 12px rgba(124,58,237,0.08)', border: '1px solid #f3e8ff' }}>
+              <h2 style={{ margin: '0 0 8px', fontSize: 18, color: '#1f2937' }}>Default Weekly Schedule</h2>
+              <p style={{ margin: '0 0 20px', color: '#6b7280', fontSize: 14 }}>Set your typical training week. This auto-adjusts your meal carbs.</p>
+
+              {/* Laura's Schedule */}
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ margin: '0 0 12px', fontSize: 15, color: '#be185d', display: 'flex', alignItems: 'center', gap: 8 }}>👩 Laura's Training</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
+                  {days.map(day => (
+                    <div
+                      key={day}
+                      onClick={() => setEditingWorkout({ person: 'laura', day })}
+                      style={{ background: '#fdf2f8', borderRadius: 12, padding: 12, textAlign: 'center', cursor: 'pointer', border: '1px solid #fbcfe8' }}
+                    >
+                      <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>{dayLabels[day]}</div>
+                      <div style={{ fontSize: 20, marginBottom: 4 }}>{getWorkoutIcon(lauraSchedule[day])}</div>
+                      <div style={{ fontSize: 10, color: '#6b7280', lineHeight: 1.2 }}>{lauraSchedule[day]}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ash's Schedule */}
+              <div>
+                <h3 style={{ margin: '0 0 12px', fontSize: 15, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: 8 }}>👨 Ash's Training</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
+                  {days.map(day => (
+                    <div
+                      key={day}
+                      onClick={() => setEditingWorkout({ person: 'ash', day })}
+                      style={{ background: '#eff6ff', borderRadius: 12, padding: 12, textAlign: 'center', cursor: 'pointer', border: '1px solid #bfdbfe' }}
+                    >
+                      <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>{dayLabels[day]}</div>
+                      <div style={{ fontSize: 20, marginBottom: 4 }}>{getWorkoutIcon(ashSchedule[day])}</div>
+                      <div style={{ fontSize: 10, color: '#6b7280', lineHeight: 1.2 }}>{ashSchedule[day]}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: '#fef3c7', borderRadius: 12, padding: 16, border: '1px solid #fde68a' }}>
+              <div style={{ fontWeight: 600, color: '#92400e', marginBottom: 4 }}>💡 How it works</div>
+              <div style={{ fontSize: 13, color: '#a16207', lineHeight: 1.5 }}>
+                When you or Ash have a big session (Long Run, Long Ride, Brick, Open Water) the next day, 
+                the meal planner will automatically suggest high-carb meals the night before.
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* RECIPES TAB */}
         {activeTab === 'recipes' && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {['all', 'chicken', 'fish', 'beef', 'pork'].map(p => (
                   <button
                     key={p}
                     onClick={() => setFilterProtein(p)}
                     style={{
-                      padding: '6px 14px',
-                      background: filterProtein === p ? '#e07a5f' : '#f5f5f5',
-                      color: filterProtein === p ? 'white' : '#333',
-                      border: 'none',
-                      borderRadius: 6,
+                      padding: '8px 14px',
+                      background: filterProtein === p ? '#7c3aed' : 'white',
+                      color: filterProtein === p ? 'white' : '#6b7280',
+                      border: filterProtein === p ? 'none' : '1px solid #e9d5ff',
+                      borderRadius: 10,
                       cursor: 'pointer',
-                      fontSize: 13
+                      fontSize: 13,
+                      fontWeight: 500
                     }}
                   >
                     {p.charAt(0).toUpperCase() + p.slice(1)}
                   </button>
                 ))}
               </div>
-              <button onClick={() => setShowAddRecipe(true)} style={{ padding: '8px 16px', background: '#e07a5f', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>+ Add Recipe</button>
+              <button onClick={() => setShowAddRecipe(true)} style={{ padding: '10px 20px', background: '#7c3aed', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14, boxShadow: '0 2px 8px rgba(124,58,237,0.3)' }}>+ Add Recipe</button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
@@ -470,41 +493,41 @@ export default function App() {
                 <div
                   key={recipe.id}
                   onClick={() => setViewingRecipe(recipe)}
-                  style={{ background: 'white', borderRadius: 10, padding: 14, border: '1px solid #eee', cursor: 'pointer' }}
+                  style={{ background: 'white', borderRadius: 14, padding: 16, border: '1px solid #f3e8ff', cursor: 'pointer', boxShadow: '0 2px 8px rgba(124,58,237,0.05)' }}
                 >
-                  <div style={{ fontWeight: 500, fontSize: 14, marginBottom: 8 }}>{recipe.name}</div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
-                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: '#f5f5f5' }}>{recipe.protein}</span>
-                    {recipe.isQuick && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: '#dcfce7', color: '#166534' }}>⚡ Quick</span>}
-                    {recipe.isSlowCooker && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: '#ffedd5', color: '#9a3412' }}>🍲 Slow</span>}
-                    {recipe.source === 'tiktok' && <span style={{ fontSize: 11 }}>📱</span>}
+                  <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 8, color: '#1f2937' }}>{recipe.name}</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: '#f5f3ff', color: '#7c3aed', fontWeight: 500 }}>{recipe.protein}</span>
+                    {recipe.isQuick && <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: '#dcfce7', color: '#166534' }}>⚡ Quick</span>}
+                    {recipe.isSlowCooker && <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: '#ffedd5', color: '#9a3412' }}>🍲 Slow</span>}
                   </div>
-                  <div style={{ fontSize: 12, color: '#666' }}>⏱ {recipe.prepTime}</div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>⏱ {recipe.prepTime} • Serves 4</div>
                 </div>
               ))}
             </div>
           </>
         )}
 
-        {activeTab === 'shopping' && (
+        {/* SHOPPING LIST TAB */}
+        {activeTab === 'list' && (
           <>
-            <div style={{ background: 'white', borderRadius: 12, padding: 16, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span><strong>{Object.values(weekPlan).filter(Boolean).length}</strong> meals • <strong>{shoppingItems.length}</strong> items</span>
+            <div style={{ background: 'white', borderRadius: 16, padding: 16, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 12px rgba(124,58,237,0.08)', border: '1px solid #f3e8ff' }}>
+              <span style={{ fontSize: 14, color: '#6b7280' }}><strong style={{ color: '#1f2937' }}>{Object.values(weekPlan).filter(Boolean).length}</strong> meals • <strong style={{ color: '#1f2937' }}>{shoppingItems.length}</strong> items</span>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setCheckedItems({})} style={{ padding: '8px 16px', background: '#f5f5f5', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Reset</button>
-                <button onClick={copyShoppingList} style={{ padding: '8px 16px', background: copiedList ? '#22c55e' : '#e07a5f', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 500 }}>
+                <button onClick={() => setCheckedItems({})} style={{ padding: '8px 16px', background: '#f5f3ff', color: '#7c3aed', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>Reset</button>
+                <button onClick={copyShoppingList} style={{ padding: '8px 16px', background: copiedList ? '#22c55e' : '#7c3aed', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 13, boxShadow: '0 2px 8px rgba(124,58,237,0.3)' }}>
                   {copiedList ? '✓ Copied!' : '📋 Copy List'}
                 </button>
               </div>
             </div>
 
             {shoppingItems.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>
-                <p style={{ fontSize: 40 }}>📝</p>
-                <p>Add meals to generate shopping list</p>
+              <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af' }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>📝</div>
+                <div style={{ fontSize: 15 }}>Add meals to generate your shopping list</div>
               </div>
             ) : (
-              <div style={{ background: 'white', borderRadius: 12, padding: 20 }}>
+              <div style={{ background: 'white', borderRadius: 16, padding: 20, boxShadow: '0 2px 12px rgba(124,58,237,0.08)', border: '1px solid #f3e8ff' }}>
                 {shoppingItems.map((item, i) => (
                   <div
                     key={i}
@@ -512,29 +535,29 @@ export default function App() {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 12,
-                      padding: '10px 0',
-                      borderBottom: i < shoppingItems.length - 1 ? '1px solid #f5f5f5' : 'none',
+                      gap: 14,
+                      padding: '14px 0',
+                      borderBottom: i < shoppingItems.length - 1 ? '1px solid #f3e8ff' : 'none',
                       cursor: 'pointer',
-                      opacity: checkedItems[item] ? 0.4 : 1,
-                      textDecoration: checkedItems[item] ? 'line-through' : 'none'
+                      opacity: checkedItems[item] ? 0.4 : 1
                     }}
                   >
                     <div style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: 4,
-                      border: '2px solid #ddd',
-                      background: checkedItems[item] ? '#e07a5f' : 'white',
+                      width: 24,
+                      height: 24,
+                      borderRadius: 6,
+                      border: checkedItems[item] ? 'none' : '2px solid #d8b4fe',
+                      background: checkedItems[item] ? '#7c3aed' : 'white',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: 'white',
-                      fontSize: 12
+                      fontSize: 14,
+                      flexShrink: 0
                     }}>
                       {checkedItems[item] && '✓'}
                     </div>
-                    <span style={{ textTransform: 'capitalize' }}>{item}</span>
+                    <span style={{ fontSize: 15, color: '#1f2937', textDecoration: checkedItems[item] ? 'line-through' : 'none' }}>{item}</span>
                   </div>
                 ))}
               </div>
@@ -543,60 +566,58 @@ export default function App() {
         )}
       </main>
 
+      {/* SELECT RECIPE MODAL */}
       {selectedDay && (
-        <div onClick={() => setSelectedDay(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, maxWidth: 500, width: '100%', maxHeight: '80vh', overflow: 'auto', padding: 24 }}>
-            <h2 style={{ margin: '0 0 16px', textTransform: 'capitalize' }}>Choose meal for {selectedDay}</h2>
-            <div
-              onClick={() => assignRecipe(selectedDay, 'eating-out')}
-              style={{ padding: 12, background: '#fef3c7', borderRadius: 8, marginBottom: 16, cursor: 'pointer', borderLeft: '4px solid #f59e0b' }}
-            >
-              <div style={{ fontWeight: 500 }}>🍽️ Eating Out</div>
-              <div style={{ fontSize: 12, color: '#666' }}>No cooking tonight</div>
+        <div onClick={() => setSelectedDay(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 500, maxHeight: '80vh', overflow: 'auto', padding: '24px 20px' }}>
+            <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
+            <h2 style={{ margin: '0 0 16px', fontSize: 18, textTransform: 'capitalize', color: '#1f2937' }}>Choose dinner for {selectedDay}</h2>
+            
+            <div onClick={() => assignRecipe(selectedDay, 'eating-out')} style={{ padding: 16, background: '#fef3c7', borderRadius: 12, marginBottom: 16, cursor: 'pointer', border: '1px solid #fde68a' }}>
+              <div style={{ fontWeight: 600, fontSize: 15, color: '#92400e' }}>🍽️ Eating Out</div>
+              <div style={{ fontSize: 13, color: '#a16207' }}>No cooking tonight</div>
             </div>
-            <div style={{ fontSize: 12, color: '#666', marginBottom: 8, fontWeight: 500 }}>OR CHOOSE A RECIPE:</div>
+            
+            <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 12, fontWeight: 600 }}>RECIPES</div>
             {recipes.filter(r => !r.isEatingOut).map(recipe => (
-              <div
-                key={recipe.id}
-                onClick={() => assignRecipe(selectedDay, recipe.id)}
-                style={{ padding: 12, background: '#faf9f7', borderRadius: 8, marginBottom: 8, cursor: 'pointer' }}
-              >
-                <div style={{ fontWeight: 500 }}>{recipe.name}</div>
-                <div style={{ fontSize: 12, color: '#666' }}>{recipe.protein} • {recipe.prepTime}</div>
+              <div key={recipe.id} onClick={() => assignRecipe(selectedDay, recipe.id)} style={{ padding: 16, background: '#faf5ff', borderRadius: 12, marginBottom: 10, cursor: 'pointer', border: '1px solid #f3e8ff' }}>
+                <div style={{ fontWeight: 600, fontSize: 15, color: '#1f2937' }}>{recipe.name}</div>
+                <div style={{ fontSize: 13, color: '#6b7280' }}>{recipe.protein} • {recipe.prepTime}</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* EDIT WORKOUT MODAL */}
       {editingWorkout && (
-        <div onClick={() => setEditingWorkout(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, maxWidth: 400, width: '100%', padding: 24 }}>
-            <h2 style={{ margin: '0 0 16px', textTransform: 'capitalize' }}>
-              {editingWorkout.person === 'laura' ? '👩 Laura' : '👨 Ash'}'s {editingWorkout.day} Workout
+        <div onClick={() => setEditingWorkout(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 400, maxHeight: '70vh', overflow: 'auto', padding: '24px 20px' }}>
+            <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
+            <h2 style={{ margin: '0 0 16px', fontSize: 18, textTransform: 'capitalize', color: '#1f2937' }}>
+              {editingWorkout.person === 'laura' ? '👩 Laura' : '👨 Ash'} - {editingWorkout.day}
             </h2>
             {(editingWorkout.person === 'laura' ? lauraWorkoutOptions : ashWorkoutOptions).map(w => {
-              const currentWorkout = editingWorkout.person === 'laura' 
-                ? weekLauraTraining[editingWorkout.day] 
-                : weekAshTraining[editingWorkout.day]
+              const current = editingWorkout.person === 'laura' ? lauraSchedule[editingWorkout.day] : ashSchedule[editingWorkout.day]
+              const isSelected = current === w.label
               return (
                 <div
                   key={w.label}
-                  onClick={() => updateWorkout(editingWorkout.day, editingWorkout.person, w)}
+                  onClick={() => updateDefaultSchedule(editingWorkout.person, editingWorkout.day, w.label)}
                   style={{ 
                     padding: 14, 
-                    background: currentWorkout?.label === w.label ? (editingWorkout.person === 'laura' ? '#fdf2f8' : '#eff6ff') : '#faf9f7', 
-                    borderRadius: 8, 
-                    marginBottom: 8, 
+                    background: isSelected ? (editingWorkout.person === 'laura' ? '#fdf2f8' : '#eff6ff') : '#fafafa', 
+                    borderRadius: 12, 
+                    marginBottom: 10, 
                     cursor: 'pointer', 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: 12,
-                    border: currentWorkout?.label === w.label ? `2px solid ${editingWorkout.person === 'laura' ? '#ec4899' : '#3b82f6'}` : '2px solid transparent'
+                    border: isSelected ? `2px solid ${editingWorkout.person === 'laura' ? '#ec4899' : '#3b82f6'}` : '1px solid #e5e7eb'
                   }}
                 >
-                  <span style={{ fontSize: 20 }}>{w.icon}</span>
-                  <span>{w.label}</span>
+                  <span style={{ fontSize: 22 }}>{w.icon}</span>
+                  <span style={{ fontSize: 15, fontWeight: isSelected ? 600 : 400, color: '#1f2937' }}>{w.label}</span>
                 </div>
               )
             })}
@@ -604,58 +625,71 @@ export default function App() {
         </div>
       )}
 
+      {/* VIEW RECIPE MODAL */}
       {viewingRecipe && (
-        <div onClick={() => setViewingRecipe(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, maxWidth: 500, width: '100%', maxHeight: '80vh', overflow: 'auto', padding: 24 }}>
-            <h2 style={{ margin: '0 0 8px' }}>{viewingRecipe.name}</h2>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-              <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 10, background: '#f5f5f5' }}>{viewingRecipe.protein}</span>
-              <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 10, background: '#f5f5f5' }}>⏱ {viewingRecipe.prepTime}</span>
+        <div onClick={() => setViewingRecipe(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 500, maxHeight: '85vh', overflow: 'auto', padding: '24px 20px' }}>
+            <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
+            <h2 style={{ margin: '0 0 8px', fontSize: 20, color: '#1f2937' }}>{viewingRecipe.name}</h2>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#f5f3ff', color: '#7c3aed', fontWeight: 500 }}>{viewingRecipe.protein}</span>
+              <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#f5f3ff', color: '#7c3aed' }}>⏱ {viewingRecipe.prepTime}</span>
+              <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#dcfce7', color: '#166534' }}>Serves 4</span>
             </div>
+            
+            {viewingRecipe.tiktokUrl && (
+              <a href={viewingRecipe.tiktokUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: 12, background: '#faf5ff', borderRadius: 10, marginBottom: 16, color: '#7c3aed', textDecoration: 'none', fontSize: 13 }}>
+                📱 View on TikTok →
+              </a>
+            )}
+            
             {viewingRecipe.ingredients && viewingRecipe.ingredients.length > 0 && (
               <>
-                <h4 style={{ margin: '0 0 8px', fontSize: 13, color: '#666' }}>INGREDIENTS</h4>
-                <ul style={{ margin: '0 0 16px', paddingLeft: 20 }}>
-                  {viewingRecipe.ingredients.map((ing, i) => <li key={i} style={{ marginBottom: 4 }}>{ing}</li>)}
+                <h4 style={{ margin: '0 0 10px', fontSize: 13, color: '#7c3aed', textTransform: 'uppercase', fontWeight: 600 }}>Ingredients</h4>
+                <ul style={{ margin: '0 0 20px', paddingLeft: 20, color: '#374151' }}>
+                  {viewingRecipe.ingredients.map((ing, i) => <li key={i} style={{ marginBottom: 6, fontSize: 15 }}>{ing}</li>)}
                 </ul>
               </>
             )}
-            <h4 style={{ margin: '0 0 8px', fontSize: 13, color: '#666' }}>METHOD</h4>
-            <p style={{ whiteSpace: 'pre-wrap', margin: '0 0 16px', lineHeight: 1.6 }}>{viewingRecipe.method}</p>
+            <h4 style={{ margin: '0 0 10px', fontSize: 13, color: '#7c3aed', textTransform: 'uppercase', fontWeight: 600 }}>Method</h4>
+            <p style={{ whiteSpace: 'pre-wrap', margin: '0 0 20px', lineHeight: 1.7, fontSize: 15, color: '#374151' }}>{viewingRecipe.method}</p>
             {viewingRecipe.notes && (
-              <div style={{ background: '#fef3c7', padding: 12, borderRadius: 8, fontSize: 14, marginBottom: 16 }}>💡 {viewingRecipe.notes}</div>
+              <div style={{ background: '#fef3c7', padding: 14, borderRadius: 12, fontSize: 14, marginBottom: 20, color: '#92400e' }}>💡 {viewingRecipe.notes}</div>
             )}
             {!viewingRecipe.isEatingOut && (
-              <button onClick={() => deleteRecipe(viewingRecipe.id)} style={{ padding: '8px 16px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 6, cursor: 'pointer' }}>🗑 Delete Recipe</button>
+              <button onClick={() => deleteRecipe(viewingRecipe.id)} style={{ padding: '12px 20px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 500, fontSize: 14 }}>🗑 Delete Recipe</button>
             )}
           </div>
         </div>
       )}
 
+      {/* ADD RECIPE MODAL */}
       {showAddRecipe && (
-        <div onClick={() => setShowAddRecipe(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 16, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
-            <h2 style={{ margin: '0 0 16px' }}>Add New Recipe</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input placeholder="Recipe name" value={newRecipe.name} onChange={e => setNewRecipe({ ...newRecipe, name: e.target.value })} style={{ padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
-              <div style={{ display: 'flex', gap: 8 }}>
-                <select value={newRecipe.protein} onChange={e => setNewRecipe({ ...newRecipe, protein: e.target.value })} style={{ flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 6 }}>
+        <div onClick={() => setShowAddRecipe(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 500, maxHeight: '90vh', overflow: 'auto', padding: '24px 20px' }}>
+            <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
+            <h2 style={{ margin: '0 0 20px', fontSize: 18, color: '#1f2937' }}>Add New Recipe</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <input placeholder="Recipe name" value={newRecipe.name} onChange={e => setNewRecipe({ ...newRecipe, name: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
+              <input placeholder="TikTok URL (optional)" value={newRecipe.tiktokUrl} onChange={e => setNewRecipe({ ...newRecipe, tiktokUrl: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
+              <div style={{ display: 'flex', gap: 10 }}>
+                <select value={newRecipe.protein} onChange={e => setNewRecipe({ ...newRecipe, protein: e.target.value })} style={{ flex: 1, padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15, background: 'white' }}>
                   <option value="chicken">Chicken</option>
                   <option value="fish">Fish</option>
                   <option value="beef">Beef</option>
                   <option value="pork">Pork</option>
                 </select>
-                <input placeholder="Prep time" value={newRecipe.prepTime} onChange={e => setNewRecipe({ ...newRecipe, prepTime: e.target.value })} style={{ flex: 1, padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
+                <input placeholder="Prep time" value={newRecipe.prepTime} onChange={e => setNewRecipe({ ...newRecipe, prepTime: e.target.value })} style={{ flex: 1, padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
               </div>
-              <div style={{ display: 'flex', gap: 16 }}>
-                <label><input type="checkbox" checked={newRecipe.isQuick} onChange={e => setNewRecipe({ ...newRecipe, isQuick: e.target.checked })} /> Quick</label>
-                <label><input type="checkbox" checked={newRecipe.isSlowCooker} onChange={e => setNewRecipe({ ...newRecipe, isSlowCooker: e.target.checked })} /> Slow cooker</label>
-                <label><input type="checkbox" checked={newRecipe.highCarb} onChange={e => setNewRecipe({ ...newRecipe, highCarb: e.target.checked })} /> High carb</label>
+              <div style={{ display: 'flex', gap: 16, fontSize: 14, color: '#374151' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={newRecipe.isQuick} onChange={e => setNewRecipe({ ...newRecipe, isQuick: e.target.checked })} /> Quick</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={newRecipe.isSlowCooker} onChange={e => setNewRecipe({ ...newRecipe, isSlowCooker: e.target.checked })} /> Slow cooker</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={newRecipe.highCarb} onChange={e => setNewRecipe({ ...newRecipe, highCarb: e.target.checked })} /> High carb</label>
               </div>
-              <textarea placeholder="Ingredients (one per line)" rows={4} value={newRecipe.ingredients} onChange={e => setNewRecipe({ ...newRecipe, ingredients: e.target.value })} style={{ padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
-              <textarea placeholder="Method" rows={4} value={newRecipe.method} onChange={e => setNewRecipe({ ...newRecipe, method: e.target.value })} style={{ padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
-              <input placeholder="Notes (e.g. dairy-free tips)" value={newRecipe.notes} onChange={e => setNewRecipe({ ...newRecipe, notes: e.target.value })} style={{ padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
-              <button onClick={addRecipe} disabled={!newRecipe.name || !newRecipe.ingredients} style={{ padding: 12, background: '#e07a5f', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>Add Recipe</button>
+              <textarea placeholder="Ingredients with measurements (one per line)&#10;e.g. 1kg chicken breast&#10;4 tbsp soy sauce&#10;&#10;Remember: serves 4 (2 dinner + 2 lunch)" rows={6} value={newRecipe.ingredients} onChange={e => setNewRecipe({ ...newRecipe, ingredients: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
+              <textarea placeholder="Method (step by step)" rows={5} value={newRecipe.method} onChange={e => setNewRecipe({ ...newRecipe, method: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
+              <input placeholder="Notes (e.g. dairy-free tips)" value={newRecipe.notes} onChange={e => setNewRecipe({ ...newRecipe, notes: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
+              <button onClick={addRecipe} disabled={!newRecipe.name || !newRecipe.ingredients} style={{ padding: 16, background: '#7c3aed', color: 'white', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 600, fontSize: 15, boxShadow: '0 2px 8px rgba(124,58,237,0.3)', opacity: (!newRecipe.name || !newRecipe.ingredients) ? 0.5 : 1 }}>Add Recipe</button>
             </div>
           </div>
         </div>
