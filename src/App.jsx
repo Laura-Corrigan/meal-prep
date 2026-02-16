@@ -75,6 +75,7 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(null)
   const [editingWorkout, setEditingWorkout] = useState(null)
   const [viewingRecipe, setViewingRecipe] = useState(null)
+  const [movingFromDay, setMovingFromDay] = useState(null)
   const [showAddRecipe, setShowAddRecipe] = useState(false)
   const [copiedList, setCopiedList] = useState(false)
   const [filterProtein, setFilterProtein] = useState('all')
@@ -92,7 +93,19 @@ export default function App() {
 
   const getPreviousDinner = (day) => {
     const dayIndex = days.indexOf(day)
-    const prevDay = days[(dayIndex - 1 + 7) % 7]
+    
+    // Monday is special - leftovers come from PREVIOUS week's Sunday
+    if (day === 'monday') {
+      const prevWeekPlan = weekPlans[currentWeekOffset - 1] || {}
+      const recipeId = prevWeekPlan['sunday']
+      if (recipeId && recipeId !== 'eating-out') {
+        return recipes.find(r => r.id === recipeId)
+      }
+      return null
+    }
+    
+    // All other days - leftovers from previous day of same week
+    const prevDay = days[dayIndex - 1]
     const recipeId = weekPlan[prevDay]
     if (recipeId && recipeId !== 'eating-out') {
       return recipes.find(r => r.id === recipeId)
@@ -105,7 +118,13 @@ export default function App() {
       try {
         const { data: recipesData } = await supabase.from('recipes').select('*')
         if (recipesData && recipesData.length > 0) {
-          setRecipes([initialRecipes[0], ...recipesData])
+          // Merge: keep all initial recipes, add any new ones from database
+          const dbIds = new Set(recipesData.map(r => r.id))
+          const merged = [
+            ...initialRecipes, // Always include defaults
+            ...recipesData.filter(r => !initialRecipes.some(ir => ir.id === r.id)) // Add user-created recipes
+          ]
+          setRecipes(merged)
         }
         const { data: plansData } = await supabase.from('week_plans').select('*')
         if (plansData && plansData.length > 0) {
@@ -156,6 +175,22 @@ export default function App() {
 
   const clearDay = (day) => {
     setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: { ...prev[currentWeekOffset], [day]: null } }))
+    setSavedPlan(false)
+  }
+
+  const moveMeal = (fromDay, toDay) => {
+    const fromRecipe = weekPlan[fromDay]
+    const toRecipe = weekPlan[toDay]
+    // Swap the meals
+    setWeekPlans(prev => ({
+      ...prev,
+      [currentWeekOffset]: {
+        ...prev[currentWeekOffset],
+        [fromDay]: toRecipe || null,
+        [toDay]: fromRecipe
+      }
+    }))
+    setMovingFromDay(null)
     setSavedPlan(false)
   }
 
@@ -332,10 +367,28 @@ export default function App() {
             <div style={{ display: 'flex', gap: 6, marginBottom: 24, overflowX: 'auto', paddingBottom: 4 }}>
               {days.map(day => {
                 const isToday = getDayDate(day, currentWeekOffset) === new Date().getDate() && currentWeekOffset === 0
+                const hasRecipe = weekPlan[day]
                 return (
-                  <div key={day} style={{ textAlign: 'center', minWidth: 44 }}>
+                  <div 
+                    key={day} 
+                    onClick={() => document.getElementById(`day-${day}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                    style={{ textAlign: 'center', minWidth: 44, cursor: 'pointer' }}
+                  >
                     <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 4 }}>{dayLabels[day]}</div>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: isToday ? '#7c3aed' : 'white', color: isToday ? 'white' : '#1f2937', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 14, border: isToday ? 'none' : '1px solid #e9d5ff', margin: '0 auto' }}>
+                    <div style={{ 
+                      width: 36, 
+                      height: 36, 
+                      borderRadius: 10, 
+                      background: isToday ? '#7c3aed' : hasRecipe ? '#f5f3ff' : 'white', 
+                      color: isToday ? 'white' : '#1f2937', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      fontWeight: 600, 
+                      fontSize: 14, 
+                      border: isToday ? 'none' : hasRecipe ? '2px solid #7c3aed' : '1px solid #e9d5ff', 
+                      margin: '0 auto' 
+                    }}>
                       {getDayDate(day, currentWeekOffset)}
                     </div>
                   </div>
@@ -353,7 +406,7 @@ export default function App() {
               const ashWorkout = ashSchedule[day]
 
               return (
-                <div key={day} style={{ background: 'white', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 2px 12px rgba(124,58,237,0.08)', border: '1px solid #f3e8ff' }}>
+                <div key={day} id={`day-${day}`} style={{ background: 'white', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 2px 12px rgba(124,58,237,0.08)', border: '1px solid #f3e8ff' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                     <div>
                       <span style={{ fontWeight: 700, fontSize: 18, textTransform: 'capitalize', color: '#1f2937' }}>{day}</span>
@@ -383,21 +436,23 @@ export default function App() {
                     </div>
 
                     {/* Dinner */}
-                    <div 
-                      onClick={() => dinner ? setViewingRecipe(dinner) : setSelectedDay(day)}
-                      style={{ background: dinner ? '#f5f3ff' : '#fafafa', borderRadius: 12, padding: 16, border: dinner ? '1px solid #ddd6fe' : '2px dashed #d1d5db', cursor: 'pointer' }}
-                    >
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#7c3aed', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        🌙 DINNER
+                    <div style={{ background: dinner ? '#f5f3ff' : '#fafafa', borderRadius: 12, padding: 16, border: dinner ? '1px solid #ddd6fe' : '2px dashed #d1d5db' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: '#7c3aed', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>🌙 DINNER</span>
+                        {dinner && (
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button onClick={() => setMovingFromDay(day)} style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', color: '#7c3aed', fontSize: 11, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, fontWeight: 500 }}>↔ Move</button>
+                            <button onClick={() => clearDay(day)} style={{ background: '#fee2e2', border: 'none', color: '#dc2626', fontSize: 11, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, fontWeight: 500 }}>✕</button>
+                          </div>
+                        )}
                       </div>
                       {dinner ? (
-                        <>
+                        <div onClick={() => setViewingRecipe(dinner)} style={{ cursor: 'pointer' }}>
                           <div style={{ fontWeight: 600, fontSize: 15, color: '#1f2937' }}>{dinner.name}</div>
-                          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Makes 4 portions</div>
-                          <button onClick={(e) => { e.stopPropagation(); clearDay(day); }} style={{ marginTop: 8, background: 'none', border: 'none', color: '#9ca3af', fontSize: 12, cursor: 'pointer' }}>✕ Remove</button>
-                        </>
+                          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Makes 4 portions • Tap for recipe</div>
+                        </div>
                       ) : (
-                        <div style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', padding: '8px 0' }}>+ Add meal</div>
+                        <div onClick={() => setSelectedDay(day)} style={{ color: '#9ca3af', fontSize: 14, textAlign: 'center', padding: '8px 0', cursor: 'pointer' }}>+ Add meal</div>
                       )}
                     </div>
                   </div>
@@ -589,6 +644,36 @@ export default function App() {
         </div>
       )}
 
+      {/* MOVE MEAL MODAL */}
+      {movingFromDay && (
+        <div onClick={() => setMovingFromDay(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 400, padding: '24px 20px' }}>
+            <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
+            <h2 style={{ margin: '0 0 8px', fontSize: 18, color: '#1f2937' }}>Move meal</h2>
+            <p style={{ margin: '0 0 20px', fontSize: 14, color: '#6b7280' }}>
+              Moving <strong>{recipes.find(r => r.id === weekPlan[movingFromDay])?.name}</strong> from <strong style={{ textTransform: 'capitalize' }}>{movingFromDay}</strong>
+            </p>
+            <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 12, fontWeight: 600 }}>SWAP WITH OR MOVE TO:</div>
+            {days.filter(d => d !== movingFromDay).map(day => {
+              const targetMeal = weekPlan[day] ? recipes.find(r => r.id === weekPlan[day]) : null
+              return (
+                <div 
+                  key={day} 
+                  onClick={() => moveMeal(movingFromDay, day)} 
+                  style={{ padding: 16, background: '#faf5ff', borderRadius: 12, marginBottom: 10, cursor: 'pointer', border: '1px solid #f3e8ff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: '#1f2937', textTransform: 'capitalize' }}>{day}</div>
+                    <div style={{ fontSize: 13, color: '#6b7280' }}>{targetMeal ? targetMeal.name : 'Empty'}</div>
+                  </div>
+                  <span style={{ color: '#7c3aed', fontSize: 18 }}>→</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* EDIT WORKOUT MODAL */}
       {editingWorkout && (
         <div onClick={() => setEditingWorkout(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
@@ -657,7 +742,11 @@ export default function App() {
               <div style={{ background: '#fef3c7', padding: 14, borderRadius: 12, fontSize: 14, marginBottom: 20, color: '#92400e' }}>💡 {viewingRecipe.notes}</div>
             )}
             {!viewingRecipe.isEatingOut && (
-              <button onClick={() => deleteRecipe(viewingRecipe.id)} style={{ padding: '12px 20px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 500, fontSize: 14 }}>🗑 Delete Recipe</button>
+              <button onClick={() => {
+                if (window.confirm(`Are you sure you want to permanently delete "${viewingRecipe.name}"? This cannot be undone.`)) {
+                  deleteRecipe(viewingRecipe.id)
+                }
+              }} style={{ padding: '12px 20px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 500, fontSize: 14 }}>🗑 Delete Recipe Forever</button>
             )}
           </div>
         </div>
