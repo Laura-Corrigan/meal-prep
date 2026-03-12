@@ -8,26 +8,36 @@ export default function App() {
   const lauraWorkoutOptions = [
     { label: 'Rest', icon: '😴' },
     { label: 'Reformer Pilates', icon: '🧘‍♀️' },
-    { label: 'Tempo Run', icon: '🏃‍♀️' },
+    { label: 'Yoga', icon: '🧘' },
     { label: 'Easy Run', icon: '🏃‍♀️' },
+    { label: 'Tempo Run', icon: '🏃‍♀️' },
     { label: 'Long Run', icon: '🏃‍♀️💪' },
     { label: 'Pilates + Run', icon: '🧘‍♀️🏃‍♀️' },
+    { label: 'Swim', icon: '🏊‍♀️' },
+    { label: 'Open Water', icon: '🌊' },
+    { label: 'Cycle', icon: '🚴‍♀️' },
+    { label: 'Long Ride', icon: '🚴‍♀️💪' },
+    { label: 'Brick', icon: '🚴‍♀️🏃‍♀️' },
     { label: 'Strength', icon: '💪' },
     { label: 'HIIT', icon: '🔥' },
-    { label: 'Swimming', icon: '🏊‍♀️' },
-    { label: 'Yoga', icon: '🧘' }
+    { label: 'Recovery', icon: '🧘' }
   ]
 
   const ashWorkoutOptions = [
     { label: 'Rest', icon: '😴' },
+    { label: 'Reformer Pilates', icon: '🧘‍♂️' },
+    { label: 'Yoga', icon: '🧘' },
+    { label: 'Easy Run', icon: '🏃‍♂️' },
+    { label: 'Tempo Run', icon: '🏃‍♂️' },
+    { label: 'Long Run', icon: '🏃‍♂️💪' },
+    { label: 'Pilates + Run', icon: '🧘‍♂️🏃‍♂️' },
     { label: 'Swim', icon: '🏊‍♂️' },
     { label: 'Open Water', icon: '🌊' },
     { label: 'Cycle', icon: '🚴‍♂️' },
     { label: 'Long Ride', icon: '🚴‍♂️💪' },
-    { label: 'Run', icon: '🏃‍♂️' },
-    { label: 'Long Run', icon: '🏃‍♂️💪' },
     { label: 'Brick', icon: '🚴‍♂️🏃‍♂️' },
     { label: 'Strength', icon: '💪' },
+    { label: 'HIIT', icon: '🔥' },
     { label: 'Recovery', icon: '🧘‍♂️' }
   ]
 
