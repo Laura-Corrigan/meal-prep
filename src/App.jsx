@@ -715,38 +715,73 @@ export default function App() {
         <div onClick={() => setViewingRecipe(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 500, maxHeight: '85vh', overflow: 'auto', padding: '24px 20px' }}>
             <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
-            <h2 style={{ margin: '0 0 8px', fontSize: 20, color: '#1f2937' }}>{viewingRecipe.name}</h2>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#f5f3ff', color: '#7c3aed', fontWeight: 500 }}>{viewingRecipe.protein}</span>
-              <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#f5f3ff', color: '#7c3aed' }}>⏱ {viewingRecipe.prepTime}</span>
-              <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#dcfce7', color: '#166534' }}>Serves 4</span>
-            </div>
             
+            {/* TikTok Button - Prominent at top */}
             {viewingRecipe.tiktokUrl && (
-              <a href={viewingRecipe.tiktokUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: 12, background: '#faf5ff', borderRadius: 10, marginBottom: 16, color: '#7c3aed', textDecoration: 'none', fontSize: 13 }}>
-                📱 View on TikTok →
+              <a 
+                href={viewingRecipe.tiktokUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: 10,
+                  padding: 16, 
+                  background: 'linear-gradient(135deg, #00f2ea 0%, #ff0050 100%)', 
+                  borderRadius: 14, 
+                  marginBottom: 20, 
+                  color: 'white', 
+                  textDecoration: 'none', 
+                  fontSize: 16,
+                  fontWeight: 700,
+                  boxShadow: '0 4px 12px rgba(255,0,80,0.3)'
+                }}
+              >
+                <span style={{ fontSize: 24 }}>📱</span>
+                Watch on TikTok
               </a>
             )}
             
+            <h2 style={{ margin: '0 0 12px', fontSize: 22, color: '#1f2937', fontWeight: 700 }}>{viewingRecipe.name}</h2>
+            
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#f5f3ff', color: '#7c3aed', fontWeight: 500 }}>{viewingRecipe.protein}</span>
+              <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#f5f3ff', color: '#7c3aed' }}>⏱ {viewingRecipe.prepTime}</span>
+              <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#dcfce7', color: '#166534' }}>👥 Serves 4</span>
+              {viewingRecipe.isSlowCooker && <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#ffedd5', color: '#9a3412' }}>🍲 Slow Cooker</span>}
+              {viewingRecipe.highCarb && <span style={{ fontSize: 12, padding: '6px 12px', borderRadius: 20, background: '#fef3c7', color: '#92400e' }}>🍝 High Carb</span>}
+            </div>
+            
             {viewingRecipe.ingredients && viewingRecipe.ingredients.length > 0 && (
-              <>
-                <h4 style={{ margin: '0 0 10px', fontSize: 13, color: '#7c3aed', textTransform: 'uppercase', fontWeight: 600 }}>Ingredients</h4>
-                <ul style={{ margin: '0 0 20px', paddingLeft: 20, color: '#374151' }}>
-                  {viewingRecipe.ingredients.map((ing, i) => <li key={i} style={{ marginBottom: 6, fontSize: 15 }}>{ing}</li>)}
+              <div style={{ background: '#faf5ff', borderRadius: 14, padding: 18, marginBottom: 20 }}>
+                <h4 style={{ margin: '0 0 14px', fontSize: 14, color: '#7c3aed', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>🛒 Ingredients</h4>
+                <ul style={{ margin: 0, paddingLeft: 20, color: '#374151' }}>
+                  {viewingRecipe.ingredients.map((ing, i) => (
+                    <li key={i} style={{ marginBottom: 10, fontSize: 16, lineHeight: 1.4 }}>{ing}</li>
+                  ))}
                 </ul>
-              </>
+              </div>
             )}
-            <h4 style={{ margin: '0 0 10px', fontSize: 13, color: '#7c3aed', textTransform: 'uppercase', fontWeight: 600 }}>Method</h4>
-            <p style={{ whiteSpace: 'pre-wrap', margin: '0 0 20px', lineHeight: 1.7, fontSize: 15, color: '#374151' }}>{viewingRecipe.method}</p>
+            
+            <div style={{ background: '#f0fdf4', borderRadius: 14, padding: 18, marginBottom: 20 }}>
+              <h4 style={{ margin: '0 0 14px', fontSize: 14, color: '#16a34a', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>👩‍🍳 Method</h4>
+              <div style={{ color: '#374151', fontSize: 16, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{viewingRecipe.method}</div>
+            </div>
+            
             {viewingRecipe.notes && (
-              <div style={{ background: '#fef3c7', padding: 14, borderRadius: 12, fontSize: 14, marginBottom: 20, color: '#92400e' }}>💡 {viewingRecipe.notes}</div>
+              <div style={{ background: '#fef3c7', padding: 16, borderRadius: 14, fontSize: 15, marginBottom: 20, color: '#92400e', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 20 }}>💡</span>
+                <span>{viewingRecipe.notes}</span>
+              </div>
             )}
+            
             {!viewingRecipe.isEatingOut && (
               <button onClick={() => {
                 if (window.confirm(`Are you sure you want to permanently delete "${viewingRecipe.name}"? This cannot be undone.`)) {
                   deleteRecipe(viewingRecipe.id)
                 }
-              }} style={{ padding: '12px 20px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 500, fontSize: 14 }}>🗑 Delete Recipe Forever</button>
+              }} style={{ padding: '14px 24px', background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 600, fontSize: 14, width: '100%' }}>🗑 Delete Recipe Forever</button>
             )}
           </div>
         </div>
@@ -757,28 +792,71 @@ export default function App() {
         <div onClick={() => setShowAddRecipe(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 500, maxHeight: '90vh', overflow: 'auto', padding: '24px 20px' }}>
             <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2, margin: '0 auto 20px' }} />
-            <h2 style={{ margin: '0 0 20px', fontSize: 18, color: '#1f2937' }}>Add New Recipe</h2>
+            <h2 style={{ margin: '0 0 8px', fontSize: 20, color: '#1f2937', fontWeight: 700 }}>Add New Recipe</h2>
+            <p style={{ margin: '0 0 20px', fontSize: 14, color: '#6b7280' }}>Add recipes from TikTok or your own favourites</p>
+            
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <input placeholder="Recipe name" value={newRecipe.name} onChange={e => setNewRecipe({ ...newRecipe, name: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
-              <input placeholder="TikTok URL (optional)" value={newRecipe.tiktokUrl} onChange={e => setNewRecipe({ ...newRecipe, tiktokUrl: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
+              <input placeholder="Recipe name" value={newRecipe.name} onChange={e => setNewRecipe({ ...newRecipe, name: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 16 }} />
+              
+              {/* TikTok URL with styling */}
+              <div style={{ background: 'linear-gradient(135deg, #00f2ea20 0%, #ff005020 100%)', borderRadius: 12, padding: 14, border: '1px solid #e9d5ff' }}>
+                <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 8, fontWeight: 600 }}>📱 TikTok Link (optional)</div>
+                <input 
+                  placeholder="https://www.tiktok.com/..." 
+                  value={newRecipe.tiktokUrl} 
+                  onChange={e => setNewRecipe({ ...newRecipe, tiktokUrl: e.target.value })} 
+                  style={{ padding: 12, border: '1px solid #ddd', borderRadius: 8, fontSize: 15, width: '100%', boxSizing: 'border-box' }} 
+                />
+                <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 6 }}>Paste the TikTok URL to easily watch while cooking</div>
+              </div>
+              
               <div style={{ display: 'flex', gap: 10 }}>
                 <select value={newRecipe.protein} onChange={e => setNewRecipe({ ...newRecipe, protein: e.target.value })} style={{ flex: 1, padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15, background: 'white' }}>
-                  <option value="chicken">Chicken</option>
-                  <option value="fish">Fish</option>
-                  <option value="beef">Beef</option>
-                  <option value="pork">Pork</option>
+                  <option value="chicken">🐔 Chicken</option>
+                  <option value="fish">🐟 Fish</option>
+                  <option value="beef">🥩 Beef</option>
+                  <option value="pork">🐷 Pork</option>
                 </select>
-                <input placeholder="Prep time" value={newRecipe.prepTime} onChange={e => setNewRecipe({ ...newRecipe, prepTime: e.target.value })} style={{ flex: 1, padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
+                <input placeholder="e.g. 15 min" value={newRecipe.prepTime} onChange={e => setNewRecipe({ ...newRecipe, prepTime: e.target.value })} style={{ flex: 1, padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
               </div>
-              <div style={{ display: 'flex', gap: 16, fontSize: 14, color: '#374151' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={newRecipe.isQuick} onChange={e => setNewRecipe({ ...newRecipe, isQuick: e.target.checked })} /> Quick</label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={newRecipe.isSlowCooker} onChange={e => setNewRecipe({ ...newRecipe, isSlowCooker: e.target.checked })} /> Slow cooker</label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="checkbox" checked={newRecipe.highCarb} onChange={e => setNewRecipe({ ...newRecipe, highCarb: e.target.checked })} /> High carb</label>
+              
+              <div style={{ display: 'flex', gap: 12, fontSize: 14, color: '#374151', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, background: newRecipe.isQuick ? '#dcfce7' : '#f5f5f5', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={newRecipe.isQuick} onChange={e => setNewRecipe({ ...newRecipe, isQuick: e.target.checked })} /> ⚡ Quick
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, background: newRecipe.isSlowCooker ? '#ffedd5' : '#f5f5f5', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={newRecipe.isSlowCooker} onChange={e => setNewRecipe({ ...newRecipe, isSlowCooker: e.target.checked })} /> 🍲 Slow cooker
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, background: newRecipe.highCarb ? '#fef3c7' : '#f5f5f5', padding: '8px 12px', borderRadius: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={newRecipe.highCarb} onChange={e => setNewRecipe({ ...newRecipe, highCarb: e.target.checked })} /> 🍝 High carb
+                </label>
               </div>
-              <textarea placeholder="Ingredients with measurements (one per line)&#10;e.g. 1kg chicken breast&#10;4 tbsp soy sauce&#10;&#10;Remember: serves 4 (2 dinner + 2 lunch)" rows={6} value={newRecipe.ingredients} onChange={e => setNewRecipe({ ...newRecipe, ingredients: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
-              <textarea placeholder="Method (step by step)" rows={5} value={newRecipe.method} onChange={e => setNewRecipe({ ...newRecipe, method: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
-              <input placeholder="Notes (e.g. dairy-free tips)" value={newRecipe.notes} onChange={e => setNewRecipe({ ...newRecipe, notes: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
-              <button onClick={addRecipe} disabled={!newRecipe.name || !newRecipe.ingredients} style={{ padding: 16, background: '#7c3aed', color: 'white', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 600, fontSize: 15, boxShadow: '0 2px 8px rgba(124,58,237,0.3)', opacity: (!newRecipe.name || !newRecipe.ingredients) ? 0.5 : 1 }}>Add Recipe</button>
+              
+              <div>
+                <div style={{ fontSize: 13, color: '#7c3aed', marginBottom: 8, fontWeight: 600 }}>🛒 Ingredients (with measurements)</div>
+                <textarea 
+                  placeholder="One ingredient per line, e.g:&#10;1kg chicken breast&#10;4 tbsp soy sauce&#10;2 cloves garlic, minced&#10;&#10;💡 Double quantities - serves 4 (dinner + lunch)" 
+                  rows={7} 
+                  value={newRecipe.ingredients} 
+                  onChange={e => setNewRecipe({ ...newRecipe, ingredients: e.target.value })} 
+                  style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15, width: '100%', boxSizing: 'border-box' }} 
+                />
+              </div>
+              
+              <div>
+                <div style={{ fontSize: 13, color: '#16a34a', marginBottom: 8, fontWeight: 600 }}>👩‍🍳 Method</div>
+                <textarea 
+                  placeholder="Step by step instructions, e.g:&#10;1. Cook rice according to packet&#10;2. Slice chicken into strips&#10;3. Fry chicken for 5-6 mins" 
+                  rows={5} 
+                  value={newRecipe.method} 
+                  onChange={e => setNewRecipe({ ...newRecipe, method: e.target.value })} 
+                  style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15, width: '100%', boxSizing: 'border-box' }} 
+                />
+              </div>
+              
+              <input placeholder="💡 Notes (e.g. add cheese separately for Laura)" value={newRecipe.notes} onChange={e => setNewRecipe({ ...newRecipe, notes: e.target.value })} style={{ padding: 14, border: '1px solid #e9d5ff', borderRadius: 10, fontSize: 15 }} />
+              
+              <button onClick={addRecipe} disabled={!newRecipe.name || !newRecipe.ingredients} style={{ padding: 16, background: '#7c3aed', color: 'white', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 16, boxShadow: '0 4px 12px rgba(124,58,237,0.3)', opacity: (!newRecipe.name || !newRecipe.ingredients) ? 0.5 : 1 }}>✨ Add Recipe</button>
             </div>
           </div>
         </div>
