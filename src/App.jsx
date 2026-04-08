@@ -60,6 +60,7 @@ export default function App() {
   const [newRecipe, setNewRecipe] = useState({ name: '', protein: 'chicken', prepTime: '', isQuick: true, isSlowCooker: false, highCarb: false, tiktokUrl: '', ingredients: '', method: '', notes: '' })
 
   const weekPlan = weekPlans[currentWeekOffset] || {}
+  
   const needsHighCarb = (day) => {
     const dayIndex = days.indexOf(day)
     const nextDay = days[(dayIndex + 1) % 7]
@@ -129,25 +130,60 @@ export default function App() {
   }
 
   const formatDate = (date) => date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  const assignRecipe = (day, recipeId) => { setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: { ...prev[currentWeekOffset], [day]: recipeId } })); setSelectedDay(null); setSavedPlan(false) }
-  const clearDay = (day) => { setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: { ...prev[currentWeekOffset], [day]: null } })); setSavedPlan(false) }
-  const moveMeal = (fromDay, toDay) => { const fromRecipe = weekPlan[fromDay]; const toRecipe = weekPlan[toDay]; setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: { ...prev[currentWeekOffset], [fromDay]: toRecipe || null, [toDay]: fromRecipe } })); setMovingFromDay(null); setSavedPlan(false) }
-  const updateDefaultSchedule = (person, day, workout) => { if (person === 'laura') setLauraSchedule(prev => ({ ...prev, [day]: workout })); else setAshSchedule(prev => ({ ...prev, [day]: workout })); setEditingWorkout(null); setSavedPlan(false) }
+  
+  const assignRecipe = (day, recipeId) => {
+    setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: { ...prev[currentWeekOffset], [day]: recipeId } }))
+    setSelectedDay(null)
+    setSavedPlan(false)
+  }
+  
+  const clearDay = (day) => {
+    setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: { ...prev[currentWeekOffset], [day]: null } }))
+    setSavedPlan(false)
+  }
+  
+  const moveMeal = (fromDay, toDay) => {
+    const fromRecipe = weekPlan[fromDay]
+    const toRecipe = weekPlan[toDay]
+    setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: { ...prev[currentWeekOffset], [fromDay]: toRecipe || null, [toDay]: fromRecipe } }))
+    setMovingFromDay(null)
+    setSavedPlan(false)
+  }
+  
+  const updateDefaultSchedule = (person, day, workout) => {
+    if (person === 'laura') setLauraSchedule(prev => ({ ...prev, [day]: workout }))
+    else setAshSchedule(prev => ({ ...prev, [day]: workout }))
+    setEditingWorkout(null)
+    setSavedPlan(false)
+  }
 
   const generatePlan = () => {
-    const newPlan = {}; const used = new Set()
+    const newPlan = {}
+    const used = new Set()
     days.forEach(day => {
-      const highCarbNeeded = needsHighCarb(day); const isWeekend = day === 'saturday' || day === 'sunday'
-      const redMeatCount = Object.values(newPlan).filter(id => { const r = recipes.find(rec => rec.id === id); return r && (r.protein === 'beef' || r.protein === 'pork') }).length
+      const highCarbNeeded = needsHighCarb(day)
+      const isWeekend = day === 'saturday' || day === 'sunday'
+      const redMeatCount = Object.values(newPlan).filter(id => {
+        const r = recipes.find(rec => rec.id === id)
+        return r && (r.protein === 'beef' || r.protein === 'pork')
+      }).length
       let pool = recipes.filter(r => !used.has(r.id) && !r.isEatingOut)
       if (redMeatCount >= 1) pool = pool.filter(r => r.protein !== 'beef' && r.protein !== 'pork')
       const healthyPool = pool.filter(r => r.protein === 'chicken' || r.protein === 'fish')
       if (healthyPool.length > 0 && Math.random() < 0.7) pool = healthyPool
       if (!isWeekend) pool = pool.filter(r => r.isQuick)
-      if (highCarbNeeded) { const hc = pool.filter(r => r.highCarb); if (hc.length > 0) pool = hc }
-      if (pool.length > 0) { const recipe = pool[Math.floor(Math.random() * pool.length)]; newPlan[day] = recipe.id; used.add(recipe.id) }
+      if (highCarbNeeded) {
+        const hc = pool.filter(r => r.highCarb)
+        if (hc.length > 0) pool = hc
+      }
+      if (pool.length > 0) {
+        const recipe = pool[Math.floor(Math.random() * pool.length)]
+        newPlan[day] = recipe.id
+        used.add(recipe.id)
+      }
     })
-    setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: newPlan })); setSavedPlan(false)
+    setWeekPlans(prev => ({ ...prev, [currentWeekOffset]: newPlan }))
+    setSavedPlan(false)
   }
 
   const savePlan = async () => {
@@ -155,12 +191,19 @@ export default function App() {
       await supabase.from('week_plans').upsert({ week_offset: currentWeekOffset, plan: weekPlan, updated_at: new Date().toISOString() }, { onConflict: 'week_offset' })
       await supabase.from('training').upsert({ week_offset: 0, laura_default: lauraSchedule, ash_default: ashSchedule, updated_at: new Date().toISOString() }, { onConflict: 'week_offset' })
       setSavedPlan(true)
-    } catch (e) { alert('Failed to save') }
+    } catch (e) {
+      alert('Failed to save')
+    }
   }
 
   const getShoppingList = () => {
     const items = {}
-    Object.values(weekPlan).forEach(id => { const recipe = recipes.find(r => r.id === id); if (recipe && !recipe.isEatingOut) { recipe.ingredients.forEach(ing => { items[ing] = (items[ing] || 0) + 1 }) } })
+    Object.values(weekPlan).forEach(id => {
+      const recipe = recipes.find(r => r.id === id)
+      if (recipe && !recipe.isEatingOut) {
+        recipe.ingredients.forEach(ing => { items[ing] = (items[ing] || 0) + 1 })
+      }
+    })
     return Object.entries(items).map(([name, count]) => count > 1 ? `${name} (×${count})` : name)
   }
 
@@ -169,17 +212,34 @@ export default function App() {
     const { start, end } = getWeekDates(currentWeekOffset)
     const meals = days.map(d => weekPlan[d] ? `${dayLabelsFull[d]}: ${recipes.find(r => r.id === weekPlan[d])?.name}` : null).filter(Boolean)
     navigator.clipboard.writeText(`Shopping List — ${formatDate(start)} to ${formatDate(end)}\n\n${items.map(i => `☐ ${i}`).join('\n')}\n\nMeals:\n${meals.join('\n')}`)
-    setCopiedList(true); setTimeout(() => setCopiedList(false), 2000)
+    setCopiedList(true)
+    setTimeout(() => setCopiedList(false), 2000)
   }
 
   const addRecipe = async () => {
     const recipe = { id: Date.now(), ...newRecipe, ingredients: newRecipe.ingredients.split('\n').filter(i => i.trim()) }
-    try { await supabase.from('recipes').insert(recipe); setRecipes(prev => [...prev, recipe]) } catch (e) { setRecipes(prev => [...prev, recipe]) }
-    setShowAddRecipe(false); setNewRecipe({ name: '', protein: 'chicken', prepTime: '', isQuick: true, isSlowCooker: false, highCarb: false, tiktokUrl: '', ingredients: '', method: '', notes: '' })
+    try {
+      await supabase.from('recipes').insert(recipe)
+      setRecipes(prev => [...prev, recipe])
+    } catch (e) {
+      setRecipes(prev => [...prev, recipe])
+    }
+    setShowAddRecipe(false)
+    setNewRecipe({ name: '', protein: 'chicken', prepTime: '', isQuick: true, isSlowCooker: false, highCarb: false, tiktokUrl: '', ingredients: '', method: '', notes: '' })
   }
 
-  const deleteRecipe = async (id) => { try { await supabase.from('recipes').delete().eq('id', id) } catch (e) {}; setRecipes(prev => prev.filter(r => r.id !== id)); setViewingRecipe(null) }
-  const updateRecipe = async (updatedRecipe) => { try { await supabase.from('recipes').upsert(updatedRecipe, { onConflict: 'id' }) } catch (e) {}; setRecipes(prev => prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r)); setEditingRecipe(null); setViewingRecipe(null) }
+  const deleteRecipe = async (id) => {
+    try { await supabase.from('recipes').delete().eq('id', id) } catch (e) {}
+    setRecipes(prev => prev.filter(r => r.id !== id))
+    setViewingRecipe(null)
+  }
+
+  const updateRecipe = async (updatedRecipe) => {
+    try { await supabase.from('recipes').upsert(updatedRecipe, { onConflict: 'id' }) } catch (e) {}
+    setRecipes(prev => prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r))
+    setEditingRecipe(null)
+    setViewingRecipe(null)
+  }
 
   const filteredRecipes = (filterProtein === 'all' ? recipes : recipes.filter(r => r.protein === filterProtein)).filter(r => !r.isEatingOut)
   const shoppingItems = getShoppingList()
@@ -187,163 +247,195 @@ export default function App() {
   const todayDinner = weekPlan[today] ? recipes.find(r => r.id === weekPlan[today]) : null
   const todayLunch = getPreviousDinner(today)
 
-  const theme = {
-    bg: '#FFFBF7',
-    card: '#FFFFFF',
-    cardAlt: '#FFF8F3',
-    border: '#F0E6DC',
-    text: '#2D2A26',
-    textSecondary: '#6B645B',
-    textMuted: '#9E9689',
-    accent: '#E85D40',
-    accentLight: '#FFF0EB',
-    success: '#4A9B7F',
-    successLight: '#E8F5EF',
-    warning: '#D4920A',
-    warningLight: '#FEF7E6',
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+        <div className="text-stone-400">Loading...</div>
+      </div>
+    )
   }
 
-  const inputStyle = { width: '100%', padding: '14px 16px', border: `1px solid ${theme.border}`, borderRadius: 12, fontSize: 15, background: theme.card, color: theme.text, boxSizing: 'border-box' }
-  const btnPrimary = { padding: '14px 24px', background: theme.accent, color: 'white', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 600, fontSize: 15, width: '100%' }
-
-  if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      <div style={{ color: theme.textMuted }}>Loading...</div>
-    </div>
-  )
-
   return (
-    <div style={{ minHeight: '100vh', background: theme.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <div className="min-h-screen bg-amber-50">
       {/* Header */}
-      <header style={{ background: theme.card, borderBottom: `1px solid ${theme.border}`, position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: 600, margin: '0 auto', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: theme.text, letterSpacing: '-0.5px' }}>What's for tea?</h1>
-          {!savedPlan && <button onClick={savePlan} style={{ padding: '10px 18px', background: theme.accent, color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Save</button>}
+      <header className="bg-white border-b border-stone-200 sticky top-0 z-50">
+        <div className="max-w-xl mx-auto px-5 py-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold text-stone-800 tracking-tight">What's for tea?</h1>
+          {!savedPlan && (
+            <button onClick={savePlan} className="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold text-sm hover:bg-orange-600 transition">
+              Save
+            </button>
+          )}
         </div>
       </header>
 
       {/* Tabs */}
-      <nav style={{ background: theme.card, borderBottom: `1px solid ${theme.border}` }}>
-        <div style={{ maxWidth: 600, margin: '0 auto', display: 'flex' }}>
-          {[{ id: 'meals', label: 'This Week' }, { id: 'training', label: 'Training' }, { id: 'recipes', label: 'Recipes' }, { id: 'list', label: 'Shopping' }].map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, padding: '16px 12px', border: 'none', background: 'none', fontSize: 14, fontWeight: 600, color: activeTab === tab.id ? theme.accent : theme.textMuted, borderBottom: `3px solid ${activeTab === tab.id ? theme.accent : 'transparent'}`, cursor: 'pointer', transition: 'all 0.2s' }}>
+      <nav className="bg-white border-b border-stone-200 sticky top-[57px] z-40">
+        <div className="max-w-xl mx-auto flex">
+          {[
+            { id: 'meals', label: 'This Week' },
+            { id: 'training', label: 'Training' },
+            { id: 'recipes', label: 'Recipes' },
+            { id: 'list', label: 'Shopping' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-4 text-sm font-semibold border-b-2 transition ${
+                activeTab === tab.id 
+                  ? 'text-orange-500 border-orange-500' 
+                  : 'text-stone-400 border-transparent hover:text-stone-600'
+              }`}
+            >
               {tab.label}
             </button>
           ))}
         </div>
       </nav>
 
-      <main style={{ maxWidth: 600, margin: '0 auto', padding: 20 }}>
+      <main className="max-w-xl mx-auto px-5 py-6">
         {/* MEALS TAB */}
         {activeTab === 'meals' && (
           <>
-            {/* Tonight */}
-            <section style={{ marginBottom: 32 }}>
-              <p style={{ margin: '0 0 6px', fontSize: 13, fontWeight: 600, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tonight</p>
-              <h2 style={{ margin: '0 0 16px', fontSize: 32, fontWeight: 800, color: theme.text, letterSpacing: '-1px', lineHeight: 1.1 }}>
+            {/* Tonight Section */}
+            <section className="mb-8">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-1">Tonight</p>
+              <h2 className="text-3xl font-extrabold text-stone-800 tracking-tight mb-4">
                 {new Date().toLocaleDateString('en-GB', { weekday: 'long' })}
               </h2>
 
-              {/* Training chips */}
-              <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                <span style={{ padding: '8px 14px', background: theme.cardAlt, borderRadius: 20, fontSize: 13, color: theme.textSecondary }}>
-                  <strong>Laura</strong> · {lauraSchedule[today]}
+              {/* Training Pills */}
+              <div className="flex gap-2 mb-4 flex-wrap">
+                <span className="px-3 py-1.5 bg-orange-50 rounded-full text-sm text-stone-600">
+                  <span className="font-semibold">Laura</span> · {lauraSchedule[today]}
                 </span>
-                <span style={{ padding: '8px 14px', background: theme.cardAlt, borderRadius: 20, fontSize: 13, color: theme.textSecondary }}>
-                  <strong>Ash</strong> · {ashSchedule[today]}
+                <span className="px-3 py-1.5 bg-orange-50 rounded-full text-sm text-stone-600">
+                  <span className="font-semibold">Ash</span> · {ashSchedule[today]}
                 </span>
               </div>
 
-              {/* Tonight's dinner card */}
+              {/* Tonight's Dinner Card */}
               <div 
                 onClick={() => todayDinner && !todayDinner.isEatingOut ? setViewingRecipe(todayDinner) : setSelectedDay(today)}
-                style={{ 
-                  background: todayDinner ? theme.card : theme.card,
-                  borderRadius: 20, 
-                  padding: 24,
-                  cursor: 'pointer',
-                  border: todayDinner ? `2px solid ${theme.accent}` : `2px dashed ${theme.border}`,
-                  boxShadow: todayDinner ? '0 4px 20px rgba(232, 93, 64, 0.12)' : 'none'
-                }}
+                className={`rounded-2xl p-6 cursor-pointer transition ${
+                  todayDinner 
+                    ? 'bg-white border-2 border-orange-500 shadow-lg shadow-orange-500/10' 
+                    : 'bg-white border-2 border-dashed border-stone-300'
+                }`}
               >
                 {todayDinner ? (
                   <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div className="flex justify-between items-start mb-3">
                       <div>
-                        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 600, color: theme.accent, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dinner</p>
-                        <h3 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: theme.text, letterSpacing: '-0.5px' }}>{todayDinner.name}</h3>
+                        <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-1">Dinner</p>
+                        <h3 className="text-xl font-bold text-stone-800">{todayDinner.name}</h3>
                       </div>
-                      <ChevronRight size={24} color={theme.accent} />
+                      <ChevronRight size={24} className="text-orange-500" />
                     </div>
-                    <div style={{ display: 'flex', gap: 16, color: theme.textSecondary, fontSize: 14, marginTop: 16 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={16} /> {todayDinner.prepTime}</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Users size={16} /> Serves 4</span>
+                    <div className="flex gap-4 text-stone-500 text-sm mt-4">
+                      <span className="flex items-center gap-1.5"><Clock size={16} /> {todayDinner.prepTime}</span>
+                      <span className="flex items-center gap-1.5"><Users size={16} /> Serves 4</span>
                     </div>
                     {needsHighCarb(today) && (
-                      <div style={{ marginTop: 16, padding: '10px 14px', background: theme.warningLight, borderRadius: 10, fontSize: 13, color: theme.warning, fontWeight: 500 }}>
+                      <div className="mt-4 px-3 py-2 bg-amber-100 rounded-lg text-sm text-amber-700 font-medium">
                         Carb loading — big session tomorrow
                       </div>
                     )}
                   </>
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                    <Plus size={28} color={theme.textMuted} style={{ marginBottom: 8 }} />
-                    <p style={{ margin: 0, color: theme.textSecondary, fontSize: 16 }}>Add tonight's meal</p>
+                  <div className="text-center py-6">
+                    <Plus size={28} className="text-stone-400 mx-auto mb-2" />
+                    <p className="text-stone-500">Add tonight's meal</p>
                   </div>
                 )}
               </div>
 
               {/* Lunch */}
               {todayLunch && (
-                <div onClick={() => setViewingRecipe(todayLunch)} style={{ marginTop: 12, padding: '16px 20px', background: theme.successLight, borderRadius: 14, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div 
+                  onClick={() => setViewingRecipe(todayLunch)} 
+                  className="mt-3 p-4 bg-emerald-50 rounded-xl cursor-pointer flex justify-between items-center"
+                >
                   <div>
-                    <p style={{ margin: '0 0 2px', fontSize: 12, fontWeight: 600, color: theme.success, textTransform: 'uppercase' }}>Lunch</p>
-                    <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: theme.text }}>{todayLunch.name} <span style={{ fontWeight: 400, color: theme.textMuted }}>(leftover)</span></p>
+                    <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Lunch</p>
+                    <p className="text-sm font-semibold text-stone-800 mt-0.5">
+                      {todayLunch.name} <span className="font-normal text-stone-400">(leftover)</span>
+                    </p>
                   </div>
-                  <ChevronRight size={18} color={theme.success} />
+                  <ChevronRight size={18} className="text-emerald-500" />
                 </div>
               )}
             </section>
 
-            {/* Week */}
+            {/* Week Section */}
             <section>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: theme.text }}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-stone-800">
                   {currentWeekOffset === 0 ? 'This week' : currentWeekOffset === 1 ? 'Next week' : currentWeekOffset === -1 ? 'Last week' : `Week ${currentWeekOffset > 0 ? '+' : ''}${currentWeekOffset}`}
                 </h3>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={generatePlan} style={{ padding: '10px 14px', background: theme.accent, color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Generate</button>
-                  <button onClick={() => setCurrentWeekOffset(o => o - 1)} style={{ width: 36, height: 36, border: `1px solid ${theme.border}`, borderRadius: 10, background: theme.card, cursor: 'pointer' }}><ChevronLeft size={18} color={theme.textSecondary} /></button>
-                  <button onClick={() => setCurrentWeekOffset(o => o + 1)} style={{ width: 36, height: 36, border: `1px solid ${theme.border}`, borderRadius: 10, background: theme.card, cursor: 'pointer' }}><ChevronRight size={18} color={theme.textSecondary} /></button>
+                <div className="flex gap-2">
+                  <button onClick={generatePlan} className="px-3 py-2 bg-orange-500 text-white rounded-lg font-semibold text-sm hover:bg-orange-600 transition">
+                    Generate
+                  </button>
+                  <button onClick={() => setCurrentWeekOffset(o => o - 1)} className="w-9 h-9 border border-stone-200 rounded-lg bg-white flex items-center justify-center hover:bg-stone-50 transition">
+                    <ChevronLeft size={18} className="text-stone-500" />
+                  </button>
+                  <button onClick={() => setCurrentWeekOffset(o => o + 1)} className="w-9 h-9 border border-stone-200 rounded-lg bg-white flex items-center justify-center hover:bg-stone-50 transition">
+                    <ChevronRight size={18} className="text-stone-500" />
+                  </button>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className="flex flex-col gap-2">
                 {days.map(day => {
-                  const recipeId = weekPlan[day]; const dinner = recipeId ? recipes.find(r => r.id === recipeId) : null
-                  const isToday = day === today && currentWeekOffset === 0; const highCarb = needsHighCarb(day)
+                  const recipeId = weekPlan[day]
+                  const dinner = recipeId ? recipes.find(r => r.id === recipeId) : null
+                  const isToday = day === today && currentWeekOffset === 0
+                  const highCarb = needsHighCarb(day)
+
                   return (
-                    <div key={day} style={{ background: isToday ? theme.accentLight : theme.card, borderRadius: 14, padding: '14px 16px', border: `1px solid ${isToday ? theme.accent : theme.border}`, display: 'flex', alignItems: 'center', gap: 14 }}>
-                      <div style={{ width: 44, textAlign: 'center' }}>
-                        <p style={{ margin: 0, fontSize: 11, color: theme.textMuted, textTransform: 'uppercase', fontWeight: 600 }}>{dayLabels[day]}</p>
-                        <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: isToday ? theme.accent : theme.text }}>{getDayDate(day, currentWeekOffset)}</p>
+                    <div 
+                      key={day} 
+                      className={`rounded-xl p-4 flex items-center gap-4 ${
+                        isToday ? 'bg-orange-50 border border-orange-500' : 'bg-white border border-stone-200'
+                      }`}
+                    >
+                      <div className="w-12 text-center">
+                        <p className="text-xs text-stone-400 uppercase font-semibold">{dayLabels[day]}</p>
+                        <p className={`text-xl font-bold ${isToday ? 'text-orange-500' : 'text-stone-800'}`}>
+                          {getDayDate(day, currentWeekOffset)}
+                        </p>
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="flex-1 min-w-0">
                         {dinner ? (
-                          <div onClick={() => setViewingRecipe(dinner)} style={{ cursor: 'pointer' }}>
-                            <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: theme.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{dinner.name}</p>
-                            <p style={{ margin: '2px 0 0', fontSize: 13, color: theme.textMuted }}>{dinner.prepTime}</p>
+                          <div onClick={() => setViewingRecipe(dinner)} className="cursor-pointer">
+                            <p className="font-semibold text-stone-800 truncate">{dinner.name}</p>
+                            <p className="text-sm text-stone-400">{dinner.prepTime}</p>
                           </div>
                         ) : (
-                          <button onClick={() => setSelectedDay(day)} style={{ background: 'none', border: 'none', padding: 0, color: theme.textMuted, fontSize: 14, cursor: 'pointer' }}>+ Add meal</button>
+                          <button onClick={() => setSelectedDay(day)} className="text-stone-400 text-sm">
+                            + Add meal
+                          </button>
                         )}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        {highCarb && <span style={{ padding: '4px 8px', background: theme.warningLight, borderRadius: 6, fontSize: 11, color: theme.warning, fontWeight: 600 }}>Carbs</span>}
+                      <div className="flex items-center gap-2">
+                        {highCarb && (
+                          <span className="px-2 py-1 bg-amber-100 rounded text-xs text-amber-700 font-semibold">Carbs</span>
+                        )}
                         {dinner && (
                           <>
-                            <button onClick={(e) => { e.stopPropagation(); setMovingFromDay(day) }} style={{ width: 28, height: 28, border: `1px solid ${theme.border}`, borderRadius: 6, background: theme.card, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ArrowLeftRight size={14} color={theme.textMuted} /></button>
-                            <button onClick={(e) => { e.stopPropagation(); clearDay(day) }} style={{ width: 28, height: 28, border: `1px solid ${theme.border}`, borderRadius: 6, background: theme.card, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} color={theme.textMuted} /></button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setMovingFromDay(day) }} 
+                              className="w-8 h-8 border border-stone-200 rounded-lg bg-white flex items-center justify-center hover:bg-stone-50"
+                            >
+                              <ArrowLeftRight size={14} className="text-stone-400" />
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); clearDay(day) }} 
+                              className="w-8 h-8 border border-stone-200 rounded-lg bg-white flex items-center justify-center hover:bg-stone-50"
+                            >
+                              <X size={14} className="text-stone-400" />
+                            </button>
                           </>
                         )}
                       </div>
@@ -358,20 +450,24 @@ export default function App() {
         {/* TRAINING TAB */}
         {activeTab === 'training' && (
           <section>
-            <div style={{ marginBottom: 24 }}>
-              <h2 style={{ margin: '0 0 8px', fontSize: 24, fontWeight: 700, color: theme.text }}>Training</h2>
-              <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>Tap to edit. Big sessions trigger carb-loading the night before.</p>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-stone-800 mb-2">Training</h2>
+              <p className="text-sm text-stone-500">Tap to edit. Big sessions trigger carb-loading the night before.</p>
             </div>
             {['laura', 'ash'].map(person => (
-              <div key={person} style={{ marginBottom: 24 }}>
-                <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 700, color: theme.text, textTransform: 'capitalize' }}>{person}</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+              <div key={person} className="mb-6">
+                <h3 className="text-base font-bold text-stone-800 capitalize mb-3">{person}</h3>
+                <div className="grid grid-cols-7 gap-1.5">
                   {days.map(day => {
                     const schedule = person === 'laura' ? lauraSchedule : ashSchedule
                     return (
-                      <button key={day} onClick={() => setEditingWorkout({ person, day })} style={{ padding: 10, background: theme.card, border: `1px solid ${theme.border}`, borderRadius: 10, cursor: 'pointer', textAlign: 'center' }}>
-                        <p style={{ margin: '0 0 4px', fontSize: 10, color: theme.textMuted, textTransform: 'uppercase' }}>{dayLabels[day]}</p>
-                        <p style={{ margin: 0, fontSize: 11, color: theme.text, fontWeight: 500 }}>{schedule[day].split(' ')[0]}</p>
+                      <button 
+                        key={day} 
+                        onClick={() => setEditingWorkout({ person, day })} 
+                        className="p-2.5 bg-white border border-stone-200 rounded-lg text-center hover:bg-stone-50 transition"
+                      >
+                        <p className="text-[10px] text-stone-400 uppercase font-semibold">{dayLabels[day]}</p>
+                        <p className="text-xs text-stone-700 font-medium mt-1 truncate">{schedule[day].split(' ')[0]}</p>
                       </button>
                     )
                   })}
@@ -384,28 +480,47 @@ export default function App() {
         {/* RECIPES TAB */}
         {activeTab === 'recipes' && (
           <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: theme.text }}>Recipes</h2>
-              <button onClick={() => setShowAddRecipe(true)} style={{ padding: '10px 16px', background: theme.accent, color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}><Plus size={18} /> Add</button>
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-2xl font-bold text-stone-800">Recipes</h2>
+              <button 
+                onClick={() => setShowAddRecipe(true)} 
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold text-sm flex items-center gap-1.5 hover:bg-orange-600 transition"
+              >
+                <Plus size={18} /> Add
+              </button>
             </div>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
+            <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
               {['all', 'chicken', 'fish', 'beef', 'pork'].map(p => (
-                <button key={p} onClick={() => setFilterProtein(p)} style={{ padding: '10px 16px', background: filterProtein === p ? theme.text : theme.card, color: filterProtein === p ? 'white' : theme.textSecondary, border: filterProtein === p ? 'none' : `1px solid ${theme.border}`, borderRadius: 20, cursor: 'pointer', fontSize: 13, fontWeight: 500, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{p}</button>
+                <button
+                  key={p}
+                  onClick={() => setFilterProtein(p)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium capitalize whitespace-nowrap transition ${
+                    filterProtein === p 
+                      ? 'bg-stone-800 text-white' 
+                      : 'bg-white border border-stone-200 text-stone-500 hover:bg-stone-50'
+                  }`}
+                >
+                  {p}
+                </button>
               ))}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="flex flex-col gap-2.5">
               {filteredRecipes.map(recipe => (
-                <div key={recipe.id} onClick={() => setViewingRecipe(recipe)} style={{ background: theme.card, borderRadius: 14, padding: 16, border: `1px solid ${theme.border}`, cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div
+                  key={recipe.id}
+                  onClick={() => setViewingRecipe(recipe)}
+                  className="bg-white border border-stone-200 rounded-xl p-4 cursor-pointer hover:border-stone-300 transition"
+                >
+                  <div className="flex justify-between items-start">
                     <div>
-                      <h4 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600, color: theme.text }}>{recipe.name}</h4>
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: theme.cardAlt, color: theme.textSecondary, textTransform: 'capitalize' }}>{recipe.protein}</span>
-                        <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: theme.cardAlt, color: theme.textSecondary }}>{recipe.prepTime}</span>
-                        {recipe.isSlowCooker && <span style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, background: theme.warningLight, color: theme.warning }}>Slow cooker</span>}
+                      <h4 className="font-semibold text-stone-800 mb-1.5">{recipe.name}</h4>
+                      <div className="flex gap-2 flex-wrap">
+                        <span className="text-xs px-2.5 py-1 rounded-md bg-orange-50 text-stone-600 capitalize">{recipe.protein}</span>
+                        <span className="text-xs px-2.5 py-1 rounded-md bg-orange-50 text-stone-600">{recipe.prepTime}</span>
+                        {recipe.isSlowCooker && <span className="text-xs px-2.5 py-1 rounded-md bg-amber-100 text-amber-700">Slow cooker</span>}
                       </div>
                     </div>
-                    {recipe.tiktokUrl && <Play size={18} color={theme.textMuted} />}
+                    {recipe.tiktokUrl && <Play size={18} className="text-stone-400" />}
                   </div>
                 </div>
               ))}
@@ -416,31 +531,49 @@ export default function App() {
         {/* SHOPPING TAB */}
         {activeTab === 'list' && (
           <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+            <div className="flex justify-between items-start mb-5">
               <div>
-                <h2 style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 700, color: theme.text }}>Shopping List</h2>
-                <p style={{ margin: 0, fontSize: 14, color: theme.textSecondary }}>{shoppingItems.length} items</p>
+                <h2 className="text-2xl font-bold text-stone-800 mb-1">Shopping List</h2>
+                <p className="text-sm text-stone-500">{shoppingItems.length} items</p>
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setCheckedItems({})} style={{ padding: '10px 14px', background: theme.card, border: `1px solid ${theme.border}`, borderRadius: 10, cursor: 'pointer', fontSize: 13, color: theme.textSecondary }}>Reset</button>
-                <button onClick={copyShoppingList} style={{ padding: '10px 14px', background: copiedList ? theme.success : theme.text, color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setCheckedItems({})} 
+                  className="px-3 py-2 bg-white border border-stone-200 rounded-lg text-sm text-stone-500 hover:bg-stone-50 transition"
+                >
+                  Reset
+                </button>
+                <button 
+                  onClick={copyShoppingList} 
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition ${
+                    copiedList ? 'bg-emerald-500 text-white' : 'bg-stone-800 text-white hover:bg-stone-700'
+                  }`}
+                >
                   {copiedList ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
                 </button>
               </div>
             </div>
             {shoppingItems.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 60, color: theme.textMuted }}>
-                <ShoppingBag size={36} style={{ marginBottom: 12, opacity: 0.4 }} />
-                <p style={{ margin: 0, fontSize: 15 }}>Add meals to generate your list</p>
+              <div className="text-center py-16 text-stone-400">
+                <ShoppingBag size={36} className="mx-auto mb-3 opacity-40" />
+                <p>Add meals to generate your list</p>
               </div>
             ) : (
-              <div style={{ background: theme.card, borderRadius: 14, border: `1px solid ${theme.border}` }}>
+              <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
                 {shoppingItems.map((item, i) => (
-                  <div key={i} onClick={() => setCheckedItems(prev => ({ ...prev, [item]: !prev[item] }))} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', borderBottom: i < shoppingItems.length - 1 ? `1px solid ${theme.border}` : 'none', cursor: 'pointer', opacity: checkedItems[item] ? 0.4 : 1 }}>
-                    <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${checkedItems[item] ? theme.success : theme.border}`, background: checkedItems[item] ? theme.success : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      {checkedItems[item] && <Check size={14} color="white" />}
+                  <div
+                    key={i}
+                    onClick={() => setCheckedItems(prev => ({ ...prev, [item]: !prev[item] }))}
+                    className={`flex items-center gap-3.5 px-4 py-3.5 cursor-pointer transition ${
+                      i < shoppingItems.length - 1 ? 'border-b border-stone-100' : ''
+                    } ${checkedItems[item] ? 'opacity-40' : ''}`}
+                  >
+                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${
+                      checkedItems[item] ? 'bg-emerald-500 border-emerald-500' : 'border-stone-300'
+                    }`}>
+                      {checkedItems[item] && <Check size={12} className="text-white" />}
                     </div>
-                    <span style={{ fontSize: 15, color: theme.text, textDecoration: checkedItems[item] ? 'line-through' : 'none' }}>{item}</span>
+                    <span className={`text-stone-700 ${checkedItems[item] ? 'line-through' : ''}`}>{item}</span>
                   </div>
                 ))}
               </div>
@@ -450,127 +583,259 @@ export default function App() {
       </main>
 
       {/* MODALS */}
+      
+      {/* Select Recipe Modal */}
       {selectedDay && (
-        <div onClick={() => setSelectedDay(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: theme.card, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 500, maxHeight: '80vh', overflow: 'auto', padding: 24 }}>
-            <h2 style={{ margin: '0 0 20px', fontSize: 20, fontWeight: 700, color: theme.text }}>{dayLabelsFull[selectedDay]}</h2>
-            <button onClick={() => assignRecipe(selectedDay, 'eating-out')} style={{ width: '100%', padding: 18, background: theme.warningLight, border: 'none', borderRadius: 14, marginBottom: 16, cursor: 'pointer', textAlign: 'left' }}>
-              <p style={{ margin: 0, fontWeight: 600, color: theme.text }}>Eating Out</p>
-              <p style={{ margin: '4px 0 0', fontSize: 13, color: theme.textMuted }}>No cooking tonight</p>
+        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50" onClick={() => setSelectedDay(null)}>
+          <div className="bg-white rounded-t-2xl w-full max-w-lg max-h-[80vh] overflow-auto p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-stone-800 mb-5">{dayLabelsFull[selectedDay]}</h2>
+            <button 
+              onClick={() => assignRecipe(selectedDay, 'eating-out')} 
+              className="w-full p-4 bg-amber-50 border border-amber-200 rounded-xl mb-4 text-left hover:bg-amber-100 transition"
+            >
+              <p className="font-semibold text-stone-800">Eating Out</p>
+              <p className="text-sm text-stone-500 mt-1">No cooking tonight</p>
             </button>
             {recipes.filter(r => !r.isEatingOut).map(recipe => (
-              <button key={recipe.id} onClick={() => assignRecipe(selectedDay, recipe.id)} style={{ width: '100%', padding: 16, background: theme.cardAlt, border: 'none', borderRadius: 12, marginBottom: 8, cursor: 'pointer', textAlign: 'left' }}>
-                <p style={{ margin: 0, fontWeight: 600, color: theme.text }}>{recipe.name}</p>
-                <p style={{ margin: '4px 0 0', fontSize: 13, color: theme.textMuted }}>{recipe.protein} · {recipe.prepTime}</p>
+              <button 
+                key={recipe.id} 
+                onClick={() => assignRecipe(selectedDay, recipe.id)} 
+                className="w-full p-4 bg-orange-50 rounded-xl mb-2 text-left hover:bg-orange-100 transition"
+              >
+                <p className="font-semibold text-stone-800">{recipe.name}</p>
+                <p className="text-sm text-stone-500 mt-1">{recipe.protein} · {recipe.prepTime}</p>
               </button>
             ))}
           </div>
         </div>
       )}
 
+      {/* View Recipe Modal */}
       {viewingRecipe && (
-        <div onClick={() => setViewingRecipe(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: theme.card, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 500, maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
+        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50" onClick={() => setViewingRecipe(null)}>
+          <div className="bg-white rounded-t-2xl w-full max-w-lg max-h-[90vh] overflow-auto p-6" onClick={e => e.stopPropagation()}>
             {viewingRecipe.tiktokUrl && (
-              <a href={viewingRecipe.tiktokUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 16, background: theme.text, borderRadius: 14, marginBottom: 20, color: 'white', textDecoration: 'none', fontSize: 15, fontWeight: 600 }}>
+              <a 
+                href={viewingRecipe.tiktokUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center justify-center gap-2 p-4 bg-stone-800 rounded-xl mb-5 text-white font-semibold hover:bg-stone-700 transition"
+              >
                 <Play size={18} /> Watch on TikTok <ExternalLink size={14} />
               </a>
             )}
-            <h2 style={{ margin: '0 0 8px', fontSize: 24, fontWeight: 700, color: theme.text }}>{viewingRecipe.name}</h2>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 13, padding: '6px 12px', borderRadius: 8, background: theme.cardAlt, color: theme.textSecondary, textTransform: 'capitalize' }}>{viewingRecipe.protein}</span>
-              <span style={{ fontSize: 13, padding: '6px 12px', borderRadius: 8, background: theme.cardAlt, color: theme.textSecondary }}>{viewingRecipe.prepTime}</span>
-              <span style={{ fontSize: 13, padding: '6px 12px', borderRadius: 8, background: theme.cardAlt, color: theme.textSecondary }}>Serves 4</span>
+            <h2 className="text-2xl font-bold text-stone-800 mb-2">{viewingRecipe.name}</h2>
+            <div className="flex gap-2 mb-6 flex-wrap">
+              <span className="text-sm px-3 py-1.5 rounded-lg bg-orange-50 text-stone-600 capitalize">{viewingRecipe.protein}</span>
+              <span className="text-sm px-3 py-1.5 rounded-lg bg-orange-50 text-stone-600">{viewingRecipe.prepTime}</span>
+              <span className="text-sm px-3 py-1.5 rounded-lg bg-orange-50 text-stone-600">Serves 4</span>
             </div>
             {viewingRecipe.ingredients?.length > 0 && (
-              <div style={{ marginBottom: 24 }}>
-                <h4 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Ingredients</h4>
-                <ul style={{ margin: 0, paddingLeft: 20, color: theme.text }}>
-                  {viewingRecipe.ingredients.map((ing, i) => <li key={i} style={{ marginBottom: 8, fontSize: 15 }}>{ing}</li>)}
+              <div className="mb-6">
+                <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wide mb-3">Ingredients</h4>
+                <ul className="text-stone-700 space-y-2 pl-5 list-disc">
+                  {viewingRecipe.ingredients.map((ing, i) => <li key={i}>{ing}</li>)}
                 </ul>
               </div>
             )}
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Method</h4>
-              <p style={{ margin: 0, color: theme.text, fontSize: 15, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{viewingRecipe.method}</p>
+            <div className="mb-6">
+              <h4 className="text-xs font-bold text-stone-400 uppercase tracking-wide mb-3">Method</h4>
+              <p className="text-stone-700 whitespace-pre-wrap leading-relaxed">{viewingRecipe.method}</p>
             </div>
-            {viewingRecipe.notes && <div style={{ padding: 16, background: theme.warningLight, borderRadius: 12, marginBottom: 24, fontSize: 14, color: theme.warning }}><strong>Note:</strong> {viewingRecipe.notes}</div>}
+            {viewingRecipe.notes && (
+              <div className="p-4 bg-amber-50 rounded-xl mb-6 text-sm text-amber-700">
+                <span className="font-semibold">Note:</span> {viewingRecipe.notes}
+              </div>
+            )}
             {!viewingRecipe.isEatingOut && (
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setEditingRecipe({...viewingRecipe, ingredients: Array.isArray(viewingRecipe.ingredients) ? viewingRecipe.ingredients.join('\n') : viewingRecipe.ingredients})} style={{ flex: 1, padding: 14, background: theme.cardAlt, border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 600, fontSize: 14, color: theme.text, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Edit3 size={16} /> Edit</button>
-                <button onClick={() => { if (window.confirm('Delete this recipe?')) deleteRecipe(viewingRecipe.id) }} style={{ padding: 14, background: theme.accentLight, border: 'none', borderRadius: 12, cursor: 'pointer', color: theme.accent }}><Trash2 size={16} /></button>
+              <div className="flex gap-2.5">
+                <button 
+                  onClick={() => setEditingRecipe({...viewingRecipe, ingredients: Array.isArray(viewingRecipe.ingredients) ? viewingRecipe.ingredients.join('\n') : viewingRecipe.ingredients})} 
+                  className="flex-1 p-3.5 bg-orange-50 rounded-xl font-semibold text-stone-800 flex items-center justify-center gap-2 hover:bg-orange-100 transition"
+                >
+                  <Edit3 size={16} /> Edit
+                </button>
+                <button 
+                  onClick={() => { if (window.confirm('Delete this recipe?')) deleteRecipe(viewingRecipe.id) }} 
+                  className="p-3.5 bg-red-50 rounded-xl text-red-500 hover:bg-red-100 transition"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             )}
           </div>
         </div>
       )}
 
+      {/* Edit Recipe Modal */}
       {editingRecipe && (
-        <div onClick={() => setEditingRecipe(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: theme.card, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 500, maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
-            <h2 style={{ margin: '0 0 20px', fontSize: 20, fontWeight: 700, color: theme.text }}>Edit Recipe</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <input placeholder="Recipe name" value={editingRecipe.name} onChange={e => setEditingRecipe({ ...editingRecipe, name: e.target.value })} style={inputStyle} />
-              <input placeholder="TikTok URL" value={editingRecipe.tiktokUrl || ''} onChange={e => setEditingRecipe({ ...editingRecipe, tiktokUrl: e.target.value })} style={inputStyle} />
-              <div style={{ display: 'flex', gap: 10 }}>
-                <select value={editingRecipe.protein} onChange={e => setEditingRecipe({ ...editingRecipe, protein: e.target.value })} style={{ ...inputStyle, flex: 1 }}>
-                  <option value="chicken">Chicken</option><option value="fish">Fish</option><option value="beef">Beef</option><option value="pork">Pork</option>
+        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50" onClick={() => setEditingRecipe(null)}>
+          <div className="bg-white rounded-t-2xl w-full max-w-lg max-h-[90vh] overflow-auto p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-stone-800 mb-5">Edit Recipe</h2>
+            <div className="flex flex-col gap-3.5">
+              <input 
+                placeholder="Recipe name" 
+                value={editingRecipe.name} 
+                onChange={e => setEditingRecipe({ ...editingRecipe, name: e.target.value })} 
+                className="w-full p-3.5 border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-orange-500 transition"
+              />
+              <input 
+                placeholder="TikTok URL" 
+                value={editingRecipe.tiktokUrl || ''} 
+                onChange={e => setEditingRecipe({ ...editingRecipe, tiktokUrl: e.target.value })} 
+                className="w-full p-3.5 border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-orange-500 transition"
+              />
+              <div className="flex gap-2.5">
+                <select 
+                  value={editingRecipe.protein} 
+                  onChange={e => setEditingRecipe({ ...editingRecipe, protein: e.target.value })} 
+                  className="flex-1 p-3.5 border border-stone-200 rounded-xl text-stone-800 bg-white focus:outline-none focus:border-orange-500 transition"
+                >
+                  <option value="chicken">Chicken</option>
+                  <option value="fish">Fish</option>
+                  <option value="beef">Beef</option>
+                  <option value="pork">Pork</option>
                 </select>
-                <input placeholder="Prep time" value={editingRecipe.prepTime} onChange={e => setEditingRecipe({ ...editingRecipe, prepTime: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
+                <input 
+                  placeholder="Prep time" 
+                  value={editingRecipe.prepTime} 
+                  onChange={e => setEditingRecipe({ ...editingRecipe, prepTime: e.target.value })} 
+                  className="flex-1 p-3.5 border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-orange-500 transition"
+                />
               </div>
-              <textarea placeholder="Ingredients (one per line)" rows={6} value={editingRecipe.ingredients} onChange={e => setEditingRecipe({ ...editingRecipe, ingredients: e.target.value })} style={{ ...inputStyle, resize: 'none' }} />
-              <textarea placeholder="Method" rows={5} value={editingRecipe.method} onChange={e => setEditingRecipe({ ...editingRecipe, method: e.target.value })} style={{ ...inputStyle, resize: 'none' }} />
-              <input placeholder="Notes" value={editingRecipe.notes || ''} onChange={e => setEditingRecipe({ ...editingRecipe, notes: e.target.value })} style={inputStyle} />
-              <button onClick={() => updateRecipe({ ...editingRecipe, ingredients: typeof editingRecipe.ingredients === 'string' ? editingRecipe.ingredients.split('\n').filter(i => i.trim()) : editingRecipe.ingredients })} style={btnPrimary}>Save changes</button>
+              <textarea 
+                placeholder="Ingredients (one per line)" 
+                rows={6} 
+                value={editingRecipe.ingredients} 
+                onChange={e => setEditingRecipe({ ...editingRecipe, ingredients: e.target.value })} 
+                className="w-full p-3.5 border border-stone-200 rounded-xl text-stone-800 resize-none focus:outline-none focus:border-orange-500 transition"
+              />
+              <textarea 
+                placeholder="Method" 
+                rows={5} 
+                value={editingRecipe.method} 
+                onChange={e => setEditingRecipe({ ...editingRecipe, method: e.target.value })} 
+                className="w-full p-3.5 border border-stone-200 rounded-xl text-stone-800 resize-none focus:outline-none focus:border-orange-500 transition"
+              />
+              <input 
+                placeholder="Notes" 
+                value={editingRecipe.notes || ''} 
+                onChange={e => setEditingRecipe({ ...editingRecipe, notes: e.target.value })} 
+                className="w-full p-3.5 border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-orange-500 transition"
+              />
+              <button 
+                onClick={() => updateRecipe({ ...editingRecipe, ingredients: typeof editingRecipe.ingredients === 'string' ? editingRecipe.ingredients.split('\n').filter(i => i.trim()) : editingRecipe.ingredients })} 
+                className="w-full p-4 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition"
+              >
+                Save changes
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Add Recipe Modal */}
       {showAddRecipe && (
-        <div onClick={() => setShowAddRecipe(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: theme.card, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 500, maxHeight: '90vh', overflow: 'auto', padding: 24 }}>
-            <h2 style={{ margin: '0 0 20px', fontSize: 20, fontWeight: 700, color: theme.text }}>Add Recipe</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <input placeholder="Recipe name" value={newRecipe.name} onChange={e => setNewRecipe({ ...newRecipe, name: e.target.value })} style={inputStyle} />
-              <input placeholder="TikTok URL (optional)" value={newRecipe.tiktokUrl} onChange={e => setNewRecipe({ ...newRecipe, tiktokUrl: e.target.value })} style={inputStyle} />
-              <div style={{ display: 'flex', gap: 10 }}>
-                <select value={newRecipe.protein} onChange={e => setNewRecipe({ ...newRecipe, protein: e.target.value })} style={{ ...inputStyle, flex: 1 }}>
-                  <option value="chicken">Chicken</option><option value="fish">Fish</option><option value="beef">Beef</option><option value="pork">Pork</option>
+        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50" onClick={() => setShowAddRecipe(false)}>
+          <div className="bg-white rounded-t-2xl w-full max-w-lg max-h-[90vh] overflow-auto p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-stone-800 mb-5">Add Recipe</h2>
+            <div className="flex flex-col gap-3.5">
+              <input 
+                placeholder="Recipe name" 
+                value={newRecipe.name} 
+                onChange={e => setNewRecipe({ ...newRecipe, name: e.target.value })} 
+                className="w-full p-3.5 border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-orange-500 transition"
+              />
+              <input 
+                placeholder="TikTok URL (optional)" 
+                value={newRecipe.tiktokUrl} 
+                onChange={e => setNewRecipe({ ...newRecipe, tiktokUrl: e.target.value })} 
+                className="w-full p-3.5 border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-orange-500 transition"
+              />
+              <div className="flex gap-2.5">
+                <select 
+                  value={newRecipe.protein} 
+                  onChange={e => setNewRecipe({ ...newRecipe, protein: e.target.value })} 
+                  className="flex-1 p-3.5 border border-stone-200 rounded-xl text-stone-800 bg-white focus:outline-none focus:border-orange-500 transition"
+                >
+                  <option value="chicken">Chicken</option>
+                  <option value="fish">Fish</option>
+                  <option value="beef">Beef</option>
+                  <option value="pork">Pork</option>
                 </select>
-                <input placeholder="Prep time" value={newRecipe.prepTime} onChange={e => setNewRecipe({ ...newRecipe, prepTime: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
+                <input 
+                  placeholder="Prep time" 
+                  value={newRecipe.prepTime} 
+                  onChange={e => setNewRecipe({ ...newRecipe, prepTime: e.target.value })} 
+                  className="flex-1 p-3.5 border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-orange-500 transition"
+                />
               </div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: theme.textSecondary, padding: '8px 12px', background: newRecipe.isQuick ? theme.successLight : theme.cardAlt, borderRadius: 8, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={newRecipe.isQuick} onChange={e => setNewRecipe({ ...newRecipe, isQuick: e.target.checked })} /> Quick
+              <div className="flex gap-2.5 flex-wrap">
+                <label className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg cursor-pointer transition ${newRecipe.isQuick ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-600'}`}>
+                  <input type="checkbox" checked={newRecipe.isQuick} onChange={e => setNewRecipe({ ...newRecipe, isQuick: e.target.checked })} className="hidden" />
+                  Quick
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: theme.textSecondary, padding: '8px 12px', background: newRecipe.isSlowCooker ? theme.warningLight : theme.cardAlt, borderRadius: 8, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={newRecipe.isSlowCooker} onChange={e => setNewRecipe({ ...newRecipe, isSlowCooker: e.target.checked })} /> Slow cooker
+                <label className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg cursor-pointer transition ${newRecipe.isSlowCooker ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-600'}`}>
+                  <input type="checkbox" checked={newRecipe.isSlowCooker} onChange={e => setNewRecipe({ ...newRecipe, isSlowCooker: e.target.checked })} className="hidden" />
+                  Slow cooker
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: theme.textSecondary, padding: '8px 12px', background: newRecipe.highCarb ? theme.warningLight : theme.cardAlt, borderRadius: 8, cursor: 'pointer' }}>
-                  <input type="checkbox" checked={newRecipe.highCarb} onChange={e => setNewRecipe({ ...newRecipe, highCarb: e.target.checked })} /> High carb
+                <label className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg cursor-pointer transition ${newRecipe.highCarb ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-600'}`}>
+                  <input type="checkbox" checked={newRecipe.highCarb} onChange={e => setNewRecipe({ ...newRecipe, highCarb: e.target.checked })} className="hidden" />
+                  High carb
                 </label>
               </div>
-              <textarea placeholder="Ingredients (one per line)" rows={6} value={newRecipe.ingredients} onChange={e => setNewRecipe({ ...newRecipe, ingredients: e.target.value })} style={{ ...inputStyle, resize: 'none' }} />
-              <textarea placeholder="Method" rows={5} value={newRecipe.method} onChange={e => setNewRecipe({ ...newRecipe, method: e.target.value })} style={{ ...inputStyle, resize: 'none' }} />
-              <input placeholder="Notes" value={newRecipe.notes} onChange={e => setNewRecipe({ ...newRecipe, notes: e.target.value })} style={inputStyle} />
-              <button onClick={addRecipe} disabled={!newRecipe.name || !newRecipe.ingredients} style={{ ...btnPrimary, opacity: (!newRecipe.name || !newRecipe.ingredients) ? 0.5 : 1 }}>Add recipe</button>
+              <textarea 
+                placeholder="Ingredients (one per line)" 
+                rows={6} 
+                value={newRecipe.ingredients} 
+                onChange={e => setNewRecipe({ ...newRecipe, ingredients: e.target.value })} 
+                className="w-full p-3.5 border border-stone-200 rounded-xl text-stone-800 resize-none focus:outline-none focus:border-orange-500 transition"
+              />
+              <textarea 
+                placeholder="Method" 
+                rows={5} 
+                value={newRecipe.method} 
+                onChange={e => setNewRecipe({ ...newRecipe, method: e.target.value })} 
+                className="w-full p-3.5 border border-stone-200 rounded-xl text-stone-800 resize-none focus:outline-none focus:border-orange-500 transition"
+              />
+              <input 
+                placeholder="Notes" 
+                value={newRecipe.notes} 
+                onChange={e => setNewRecipe({ ...newRecipe, notes: e.target.value })} 
+                className="w-full p-3.5 border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-orange-500 transition"
+              />
+              <button 
+                onClick={addRecipe} 
+                disabled={!newRecipe.name || !newRecipe.ingredients} 
+                className={`w-full p-4 bg-orange-500 text-white rounded-xl font-semibold transition ${(!newRecipe.name || !newRecipe.ingredients) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-600'}`}
+              >
+                Add recipe
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Edit Workout Modal */}
       {editingWorkout && (
-        <div onClick={() => setEditingWorkout(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: theme.card, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 400, maxHeight: '70vh', overflow: 'auto', padding: 24 }}>
-            <h2 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: theme.text }}>{editingWorkout.person === 'laura' ? 'Laura' : 'Ash'} · {dayLabelsFull[editingWorkout.day]}</h2>
+        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50" onClick={() => setEditingWorkout(null)}>
+          <div className="bg-white rounded-t-2xl w-full max-w-md max-h-[70vh] overflow-auto p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-stone-800 mb-5">
+              {editingWorkout.person === 'laura' ? 'Laura' : 'Ash'} · {dayLabelsFull[editingWorkout.day]}
+            </h2>
             {workoutOptions.map(w => {
               const current = editingWorkout.person === 'laura' ? lauraSchedule[editingWorkout.day] : ashSchedule[editingWorkout.day]
               const isSelected = current === w.label
               return (
-                <button key={w.label} onClick={() => updateDefaultSchedule(editingWorkout.person, editingWorkout.day, w.label)} style={{ width: '100%', padding: 14, background: isSelected ? theme.accentLight : theme.cardAlt, border: isSelected ? `2px solid ${theme.accent}` : 'none', borderRadius: 12, marginBottom: 8, cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 15, fontWeight: isSelected ? 600 : 400, color: theme.text }}>{w.label}</span>
-                  {w.intense && <span style={{ fontSize: 11, padding: '2px 8px', background: theme.warningLight, color: theme.warning, borderRadius: 4 }}>Carb loading</span>}
+                <button
+                  key={w.label}
+                  onClick={() => updateDefaultSchedule(editingWorkout.person, editingWorkout.day, w.label)}
+                  className={`w-full p-3.5 rounded-xl mb-2 text-left flex justify-between items-center transition ${
+                    isSelected ? 'bg-orange-100 border-2 border-orange-500' : 'bg-orange-50 hover:bg-orange-100'
+                  }`}
+                >
+                  <span className={`${isSelected ? 'font-semibold' : ''} text-stone-800`}>{w.label}</span>
+                  {w.intense && <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded">Carb loading</span>}
                 </button>
               )
             })}
@@ -578,20 +843,27 @@ export default function App() {
         </div>
       )}
 
+      {/* Move Meal Modal */}
       {movingFromDay && (
-        <div onClick={() => setMovingFromDay(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: theme.card, borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 400, padding: 24 }}>
-            <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: theme.text }}>Move meal</h2>
-            <p style={{ margin: '0 0 20px', fontSize: 14, color: theme.textSecondary }}>Moving <strong>{recipes.find(r => r.id === weekPlan[movingFromDay])?.name}</strong></p>
+        <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50" onClick={() => setMovingFromDay(null)}>
+          <div className="bg-white rounded-t-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-stone-800 mb-2">Move meal</h2>
+            <p className="text-sm text-stone-500 mb-5">
+              Moving <span className="font-semibold">{recipes.find(r => r.id === weekPlan[movingFromDay])?.name}</span>
+            </p>
             {days.filter(d => d !== movingFromDay).map(day => {
               const targetMeal = weekPlan[day] ? recipes.find(r => r.id === weekPlan[day]) : null
               return (
-                <button key={day} onClick={() => moveMeal(movingFromDay, day)} style={{ width: '100%', padding: 14, background: theme.cardAlt, border: 'none', borderRadius: 12, marginBottom: 8, cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button 
+                  key={day} 
+                  onClick={() => moveMeal(movingFromDay, day)} 
+                  className="w-full p-3.5 bg-orange-50 rounded-xl mb-2 text-left flex justify-between items-center hover:bg-orange-100 transition"
+                >
                   <div>
-                    <p style={{ margin: 0, fontWeight: 600, color: theme.text }}>{dayLabelsFull[day]}</p>
-                    <p style={{ margin: '2px 0 0', fontSize: 13, color: theme.textMuted }}>{targetMeal ? `Swap with ${targetMeal.name}` : 'Empty'}</p>
+                    <p className="font-semibold text-stone-800">{dayLabelsFull[day]}</p>
+                    <p className="text-sm text-stone-400">{targetMeal ? `Swap with ${targetMeal.name}` : 'Empty'}</p>
                   </div>
-                  <ChevronRight size={18} color={theme.textMuted} />
+                  <ChevronRight size={18} className="text-stone-400" />
                 </button>
               )
             })}
