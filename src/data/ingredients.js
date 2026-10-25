@@ -86,7 +86,7 @@ export const INGREDIENTS = {
   baguette: { name: 'Baguette', cat: 'bakery', unit: 'each', packs: [[1, 'single']], flags: ['gluten'] },
 
   // Cupboard
-  rice: { name: 'Basmati rice', cat: 'cupboard', unit: 'g', packs: g(1000) },
+  rice: { name: 'Microwave rice', cat: 'cupboard', unit: 'pouch', packs: [[1, '250g pouch']], search: 'microwave rice 250g' },
   arborio: { name: 'Risotto rice', cat: 'cupboard', unit: 'g', packs: g(500) },
   pasta: { name: 'Penne pasta', cat: 'cupboard', unit: 'g', packs: g(500), flags: ['gluten'] },
   spaghetti: { name: 'Spaghetti', cat: 'cupboard', unit: 'g', packs: g(500), flags: ['gluten'] },
@@ -174,7 +174,7 @@ export const ALIASES = {
   'black beans': 'black-beans', 'kidney beans': 'kidney-beans', 'sour cream': 'sour-cream', 'soured cream': 'sour-cream', 'taco kit': 'taco-kit', 'fajita kit': 'fajita-kit', 'dough balls': 'garlic-dough-balls', mangetout: 'mangetout', 'wok noodles': 'wok-noodles', 'cannellini beans': 'cannellini', peas: 'frozen-peas', wraps: 'tortillas',
   pitta: 'pittas', 'peanut butter': 'peanut-butter', 'stir fry veg': 'stir-fry-veg', 'stir-fry veg': 'stir-fry-veg',
   tenderstem: 'tenderstem', spinach: 'spinach', broccoli: 'broccoli', asparagus: 'asparagus', chorizo: 'chorizo',
-  cucumber: 'cucumber', garlic: 'lazy-garlic', ginger: 'lazy-ginger', 'lazy garlic': 'lazy-garlic', 'lazy ginger': 'lazy-ginger', rice: 'rice', pasta: 'pasta', feta: 'feta',
+  cucumber: 'cucumber', garlic: 'lazy-garlic', ginger: 'lazy-ginger', 'lazy garlic': 'lazy-garlic', 'lazy ginger': 'lazy-ginger', rice: 'rice', 'microwave rice': 'rice', 'rice pouch': 'rice', pasta: 'pasta', feta: 'feta',
 }
 
 export function ingredient(id) {

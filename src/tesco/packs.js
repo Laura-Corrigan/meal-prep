@@ -21,7 +21,7 @@ export function choosePacks(need, packs) {
 
   const walk = (i, counts) => {
     if (i === sizes.length) return consider(counts)
-    const max = Math.min(12, Math.ceil(need / sizes[i][0]) + 1)
+    const max = Math.min(30, Math.ceil(need / sizes[i][0]) + 1)
     for (let c = 0; c <= max; c++) { counts[i] = c; walk(i + 1, counts) }
   }
   walk(0, new Array(sizes.length).fill(0))

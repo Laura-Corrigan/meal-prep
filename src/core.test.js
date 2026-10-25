@@ -308,3 +308,18 @@ describe('steak salad', () => {
     expect(fridays).toBeGreaterThan(0)
   })
 })
+
+describe('microwave rice', () => {
+  it('buys 250g pouches: 2 per rice dinner, merged across the week', () => {
+    const w = emptyWeek('2026-10-12')
+    ;['beef-chilli', 'bbq-chicken', 'thai-red-curry', 'beef-tacos'].forEach((id, i) => { w.days[DAYS[i]].recipeId = id })
+    const rice = buildShoppingList(w, baseState()).toBuy.find(i => i.id === 'rice')
+    expect(rice.name).toBe('Microwave rice')
+    expect(rice.qty).toBe(7) // 3 dinners × 2 + 1 for taco lunch bowls
+    expect(rice.packText).toBe('7 × 250g pouch')
+    expect(rice.qtyText).toBe('7 pouches')
+  })
+  it('parses pouches in your own recipes', () => {
+    expect(parseIngredientLine('2 pouches microwave rice')).toEqual(['rice', 2])
+  })
+})

@@ -20,12 +20,12 @@ export const RECIPES = [
     kcal: 620, proteinG: 42,
     image: img('photo-1658308766948-01c85ade2737', 'Svitlana'),
     link: { url: 'https://www.bbcgoodfood.com/recipes/chilli-con-carne-recipe', similar: false },
-    ingredients: [['beef-mince', 500], ['onions', 1, 'diced'], ['peppers', 1, 'diced'], ['lazy-garlic', 2], ['cumin', 2], ['smoked-paprika', 2], ['chilli-flakes', 1], ['tinned-tomatoes', 1], ['kidney-beans', 1, 'drained'], ['stock-cube', 1, 'beef'], ['rice', 300]],
+    ingredients: [['beef-mince', 500], ['onions', 1, 'diced'], ['peppers', 1, 'diced'], ['lazy-garlic', 2], ['cumin', 2], ['smoked-paprika', 2], ['chilli-flakes', 1], ['tinned-tomatoes', 1], ['kidney-beans', 1, 'drained'], ['stock-cube', 1, 'beef'], ['rice', 2]],
     steps: [
       'Brown the mince in a large pan for 5 mins.',
       'Add the onion, pepper and garlic for 5 mins, then the spices for 1 min.',
       'Add the tomatoes, kidney beans, stock cube and 200ml water. Simmer for 20 mins.',
-      'Meanwhile cook the rice. Serve together.',
+      'Microwave the rice pouches and serve together.',
     ],
   },
   {
@@ -36,13 +36,12 @@ export const RECIPES = [
     kcal: 580, proteinG: 46,
     image: img('photo-1678269367737-eb7f31f720f8', 'You Le'),
     link: { url: 'https://www.bbcgoodfood.com/recipes/bbq-chicken-corn-rice', similar: true },
-    ingredients: [['chicken-thighs', 800], ['bbq-sauce', 5], ['smoked-paprika', 1], ['rice', 300], ['broccoli', 1, 'florets'], ['olive-oil', 1]],
+    ingredients: [['chicken-thighs', 800], ['bbq-sauce', 5], ['smoked-paprika', 1], ['rice', 2], ['broccoli', 1, 'florets'], ['olive-oil', 1]],
     steps: [
-      'Put the rice on to cook.',
       'Toss the chicken with the oil and paprika. Air fry at 200°C for 12 mins.',
       'Brush with BBQ sauce and air fry for 5–6 more mins until sticky and cooked through.',
       'Microwave the broccoli with a splash of water, covered, for 4 mins.',
-      'Slice the chicken and serve with rice, broccoli and extra BBQ sauce.',
+      'Microwave the rice pouches. Slice the chicken and serve with rice, broccoli and extra BBQ sauce.',
     ],
   },
   {
@@ -145,18 +144,17 @@ export const RECIPES = [
   {
     id: 'beef-tacos',
     name: 'Beef Tacos',
-    description: 'Taco kit night with guac, sour cream and cheese. Cook extra rice and tomorrow’s lunch is taco bowls.',
+    description: 'Taco kit night with guac, sour cream and cheese. Add a rice pouch and tomorrow’s lunch is taco bowls.',
     mins: 25, protein: 'beef', cuisine: 'mexican', carb: 'wraps', method: 'one-pan', cost: 2, fun: true,
     kcal: 720, proteinG: 40,
     image: img('photo-1599974579688-8dbdd335c77f', 'Jeswin Thomas'),
     link: { url: 'https://www.bbcgoodfood.com/recipes/speedy-beef-tacos', similar: true },
-    ingredients: [['beef-mince', 500], ['taco-kit', 1], ['red-onion', 1, 'diced'], ['little-gem', 1, 'shredded'], ['avocados', 2, 'for guac'], ['limes', 1, 'for guac'], ['sour-cream', 150], ['grated-cheese', 100], ['rice', 200, 'for tomorrow’s lunch']],
+    ingredients: [['beef-mince', 500], ['taco-kit', 1], ['red-onion', 1, 'diced'], ['little-gem', 1, 'shredded'], ['avocados', 2, 'for guac'], ['limes', 1, 'for guac'], ['sour-cream', 150], ['grated-cheese', 100], ['rice', 1, 'for tomorrow’s lunch']],
     steps: [
-      'Put the rice on to cook. It’s for tomorrow’s lunch bowls.',
       'Brown the mince in a large pan for 5 mins, then add half the onion for 3 mins.',
       'Stir in the kit’s seasoning with the water on the packet and simmer for 5 mins.',
       'Mash the avocados with lime juice, the rest of the onion and a pinch of salt for guac.',
-      'Warm the shells or wraps and fill with beef, lettuce, guac, sour cream and cheese. Box up leftover beef with the rice.',
+      'Warm the shells or wraps and fill with beef, lettuce, guac, sour cream and cheese. Box up the leftover beef with the rice pouch for tomorrow’s lunch.',
     ],
   },
   {
@@ -231,12 +229,11 @@ export const RECIPES = [
     mins: 25, protein: 'chicken', cuisine: 'indian', carb: 'rice', method: 'one-pan', cost: 2, fun: true,
     kcal: 620, proteinG: 44,
     image: img('photo-1708782344490-9026aaa5eec7', 'Rimsha Noor'),
-    ingredients: [['chicken-thighs', 700, 'chopped'], ['spice-tailor-kit', 2], ['spinach', 100], ['rice', 300]],
+    ingredients: [['chicken-thighs', 700, 'chopped'], ['spice-tailor-kit', 2], ['spinach', 100], ['rice', 2]],
     steps: [
-      'Put the rice on to cook.',
       'Follow the kit: fry the spice pouch, add the chicken and brown for 5 mins.',
       'Add the sauce and simmer for 12–15 mins until the chicken is cooked.',
-      'Stir in the spinach until wilted. Serve with rice.',
+      'Stir in the spinach until wilted. Microwave the rice pouches and serve.',
     ],
   },
   {
@@ -247,12 +244,11 @@ export const RECIPES = [
     kcal: 640, proteinG: 42,
     image: img('photo-1587040690786-b091531837a2', 'iMattSmart'),
     link: { url: 'https://www.bbcgoodfood.com/recipes/thai-red-chicken-curry', similar: false },
-    ingredients: [['chicken-thighs', 700, 'chopped'], ['red-curry-paste', 3], ['coconut-milk', 1], ['peppers', 1, 'sliced'], ['green-beans', 200, 'halved'], ['fish-sauce', 1], ['limes', 1], ['rice', 300]],
+    ingredients: [['chicken-thighs', 700, 'chopped'], ['red-curry-paste', 3], ['coconut-milk', 1], ['peppers', 1, 'sliced'], ['green-beans', 200, 'halved'], ['fish-sauce', 1], ['limes', 1], ['rice', 2]],
     steps: [
-      'Put the rice on to cook.',
       'Fry the curry paste in a large pan for 1 min, then add the chicken and cook for 5 mins.',
       'Pour in the coconut milk, add the pepper and beans and simmer for 12 mins.',
-      'Season with fish sauce and lime juice. Serve over rice.',
+      'Season with fish sauce and lime juice. Microwave the rice pouches and serve.',
     ],
   },
   {
