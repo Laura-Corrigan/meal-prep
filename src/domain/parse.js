@@ -29,7 +29,8 @@ export function parseIngredientLine(raw) {
   const qty = FRACTIONS[m[1]] ?? Number(m[1])
   const unit = m[2] ? (SINGULAR[m[2].toLowerCase()] || m[2].toLowerCase()) : null
   const base = ingredient(id).unit
-  const converted = unit ? toBase(qty, unit === 'clove' ? 'clove' : unit, base) : qty
+  // We use lazy garlic: 1 tsp from the jar is about one clove.
+  const converted = unit === 'clove' && base === 'tsp' ? qty : unit ? toBase(qty, unit, base) : qty
   if (converted == null) return { text: line }
   return note ? [id, converted, note] : [id, converted]
 }

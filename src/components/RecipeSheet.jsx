@@ -10,10 +10,22 @@ import { formatQty } from '../domain/units'
 import { DAYS, DAY_LABEL, DAY_SHORT } from '../domain/week'
 
 // "1 red onion", "2 red onions"
+const BRANDS = /^(Heinz|The Spice Tailor|El Paso)\b/
 function displayName(ing, qty) {
-  const name = ing.name.toLowerCase()
+  // Lower-case the first letter only, so brand names keep their capitals.
+  const name = BRANDS.test(ing.name) ? ing.name : ing.name.charAt(0).toLowerCase() + ing.name.slice(1)
   if (!ing.plural || qty == null || qty > 1) return name
   return name.replace(/oes$/, 'o').replace(/s$/, '')
+}
+
+function DeleteRecipe({ recipe, onDone }) {
+  const { actions, setToast } = useApp()
+  return (
+    <button className="text-sm font-semibold text-ink-faint underline underline-offset-2 mt-6 block"
+      onClick={() => { if (confirm(`Delete ${recipe.name}?`)) { actions.removeRecipe(recipe.id); setToast({ title: `${recipe.name} deleted` }); onDone() } }}>
+      Delete this recipe
+    </button>
+  )
 }
 
 // Put this recipe on a day of the week you're looking at.
@@ -177,6 +189,8 @@ export default function RecipeSheet({ recipeId, onClose }) {
             <p className="text-sm text-ink-faint mt-0.5">Your ratings shape future weeks.</p>
             <div className="mt-3"><RatingButtons recipeId={recipe.id} size="lg" /></div>
           </section>
+
+          {recipe.custom && <DeleteRecipe recipe={recipe} onDone={onClose} />}
 
           {recipe.image?.credit && (
             <p className="text-xs text-ink-faint mt-6">Photo: {recipe.image.credit} on Unsplash</p>

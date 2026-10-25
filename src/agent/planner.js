@@ -29,6 +29,9 @@ export function recentMeals(state, today) {
   return out
 }
 
+// Some meals only make sense on certain nights (a Friday steak salad).
+const fitsDay = (recipe, day) => !recipe.onlyDays?.length || recipe.onlyDays.includes(day)
+
 const matchesProtein = (recipe, list) => list.some(p => p === recipe.protein || p === proteinFamily(recipe.protein))
 
 // Leftover quantities from rounding the week's needs up to whole packs.
@@ -126,7 +129,7 @@ export function planDays({ state, week, days, constraints = {}, dayConstraints =
   for (const day of order) {
     const c = { ...constraints, ...(dayConstraints[day] || {}) }
     const used = new Set(chosen.map(r => r.id))
-    const base = library.filter(r => !used.has(r.id) && !(c.exclude || []).includes(r.id) && isAllowed(r, prefs, ratings))
+    const base = library.filter(r => !used.has(r.id) && !(c.exclude || []).includes(r.id) && isAllowed(r, prefs, ratings) && fitsDay(r, day))
     const strict = base.filter(r =>
       (!c.maxMins || r.mins <= c.maxMins) &&
       (!c.maxCost || r.cost <= c.maxCost) &&
@@ -165,7 +168,7 @@ export function suggestionsFor({ state, week, day, count = 3, today = new Date()
   const spare = spareFromPacks(others, factor)
   const recent = recentMeals(state, today)
   return allRecipes(state)
-    .filter(r => r.id !== current && !others.some(o => o.id === r.id) && isAllowed(r, prefs, ratings))
+    .filter(r => r.id !== current && !others.some(o => o.id === r.id) && isAllowed(r, prefs, ratings) && fitsDay(r, day))
     .map(r => ({ recipe: r, ...scoreRecipe(r, { chosen: others, ratings, recent, day, c: {}, spare, factor, prefs }) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, count)

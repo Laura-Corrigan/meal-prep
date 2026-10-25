@@ -5,7 +5,7 @@ import { DIETS } from '../domain/prefs'
 import { PROTEINS, RECIPES } from '../data/recipes'
 import { ALIASES, INGREDIENTS, ingredient } from '../data/ingredients'
 
-const COMMON_DISLIKES = ['salmon-fillets', 'lamb-mince', 'peppers', 'avocados', 'asparagus', 'sweet-potatoes', 'black-beans', 'coconut-milk', 'peanut-butter', 'spinach']
+const COMMON_DISLIKES = ['salmon-fillets', 'kidney-beans', 'peppers', 'avocados', 'asparagus', 'sweet-potatoes', 'mangetout', 'coconut-milk', 'peanut-butter', 'spinach']
 
 function Section({ title, hint, children }) {
   return (

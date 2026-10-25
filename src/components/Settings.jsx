@@ -2,11 +2,9 @@ import React, { useState } from 'react'
 import { ArrowLeft, Copy, Trash2, Plus } from 'lucide-react'
 import { useApp } from '../context'
 import PreferencesForm from './PreferencesForm'
-import { Sheet } from './ui'
+import AddRecipeSheet from './AddRecipeSheet'
 import { INGREDIENTS } from '../data/ingredients'
-import { PROTEINS } from '../data/recipes'
 import { isPantry } from '../domain/shopping'
-import { parseIngredientLine } from '../domain/parse'
 import { syncEnabled } from '../store/sync'
 
 function Card({ title, hint, children }) {
@@ -22,42 +20,6 @@ function Card({ title, hint, children }) {
 const PANTRY_CANDIDATES = Object.entries(INGREDIENTS)
   .filter(([, i]) => i.pantry || ['cupboard'].includes(i.cat))
   .sort((a, b) => a[1].name.localeCompare(b[1].name))
-
-function AddRecipe({ open, onClose }) {
-  const { actions, setToast } = useApp()
-  const [f, setF] = useState({ name: '', mins: 30, protein: 'chicken', ingredients: '', steps: '', link: '' })
-  const set = (k, v) => setF(x => ({ ...x, [k]: v }))
-  const save = () => {
-    const ingredients = f.ingredients.split('\n').map(parseIngredientLine).filter(Boolean)
-    actions.addRecipe({
-      id: `custom-${Date.now()}`, custom: true, name: f.name.trim(), description: '',
-      mins: Number(f.mins) || 30, protein: f.protein, cuisine: 'other', carb: null, method: 'hob', cost: 2,
-      link: /^https?:\/\//.test(f.link.trim()) ? { url: f.link.trim(), similar: false } : undefined,
-      ingredients, steps: f.steps.split('\n').map(s => s.replace(/^\s*\d+[.)]\s*/, '').trim()).filter(Boolean),
-    })
-    setToast({ title: `${f.name} added to your recipes` })
-    setF({ name: '', mins: 30, protein: 'chicken', ingredients: '', steps: '', link: '' })
-    onClose()
-  }
-  const input = 'w-full px-4 py-3 rounded-2xl bg-paper border border-line focus:outline-none focus:border-ink-faint'
-  return (
-    <Sheet open={open} onClose={onClose} title="Add a recipe"
-      footer={<button className="btn-primary w-full" disabled={!f.name.trim() || !f.ingredients.trim()} onClick={save}>Save recipe</button>}>
-      <div className="px-5 pb-5 space-y-3">
-        <input className={input} placeholder="Recipe name" value={f.name} onChange={e => set('name', e.target.value)} />
-        <div className="flex gap-2">
-          <select className={input} value={f.protein} onChange={e => set('protein', e.target.value)}>
-            {Object.entries(PROTEINS).map(([id, p]) => <option key={id} value={id}>{p.label}</option>)}
-          </select>
-          <input className={input} type="number" inputMode="numeric" min={5} max={120} value={f.mins} onChange={e => set('mins', e.target.value)} aria-label="Minutes" />
-        </div>
-        <textarea className={input} rows={6} placeholder={'Ingredients for 4, one per line\n500g chicken breast, sliced\n2 peppers\n1 tin chopped tomatoes'} value={f.ingredients} onChange={e => set('ingredients', e.target.value)} />
-        <textarea className={input} rows={5} placeholder="Steps, one per line" value={f.steps} onChange={e => set('steps', e.target.value)} />
-        <input className={input} type="url" inputMode="url" placeholder="Recipe link, e.g. BBC Good Food (optional)" value={f.link} onChange={e => set('link', e.target.value)} />
-      </div>
-    </Sheet>
-  )
-}
 
 export default function Settings() {
   const { state, actions, back, sync, reset } = useApp()
@@ -123,7 +85,7 @@ export default function Settings() {
           Start again from scratch
         </button>
       </main>
-      <AddRecipe open={adding} onClose={() => setAdding(false)} />
+      <AddRecipeSheet open={adding} onClose={() => setAdding(false)} />
     </div>
   )
 }
