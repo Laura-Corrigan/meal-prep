@@ -53,15 +53,23 @@ function findMinutes(t) {
   return null
 }
 
+// Match a recipe by its distinctive words ("meatballs", "risotto", "chow mein").
+// Generic words like "chicken" alone are too ambiguous to pick a recipe.
+const GENERIC = new Set(['have', 'make', 'want', 'cook', 'with', 'chicken', 'beef', 'night', 'week', 'that', 'this', 'instead',
+  'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'mondays', 'tuesdays', 'wednesdays', 'thursdays', 'fridays'])
 function findRecipe(t, state) {
-  const words = t.replace(/[^a-z ]/g, ' ').split(/\s+/).filter(w => w.length > 3)
-  let best = null, bestHits = 1
+  const words = t.replace(/[^a-z ]/g, ' ').split(/\s+/).filter(w => w.length > 2 && !GENERIC.has(w))
+  let best = null, bestScore = 0, tie = false
   for (const r of allRecipes(state)) {
-    const name = r.name.toLowerCase()
-    const hits = words.filter(w => name.includes(w)).length
-    if (hits > bestHits) { best = r; bestHits = hits }
+    const name = r.name.toLowerCase().replace(/['’]/g, '')
+    const matched = words.filter(w => new RegExp(`\\b${w}`).test(name))
+    if (!matched.length) continue
+    // More matching words wins; a name that starts with the word wins a tie ("pie" → Pie night).
+    const score = matched.length * 10 + (matched.some(w => name.startsWith(w)) ? 1 : 0)
+    if (score > bestScore) { best = r; bestScore = score; tie = false }
+    else if (score === bestScore) tie = true
   }
-  return best
+  return tie ? null : best
 }
 
 export function interpretRules(text, { state, today = new Date() } = {}) {

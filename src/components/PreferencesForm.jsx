@@ -2,10 +2,10 @@ import React, { useState } from 'react'
 import { Minus, Plus } from 'lucide-react'
 import { Chips } from './ui'
 import { DIETS } from '../domain/prefs'
-import { PROTEINS } from '../data/recipes'
+import { PROTEINS, RECIPES } from '../data/recipes'
 import { ALIASES, INGREDIENTS, ingredient } from '../data/ingredients'
 
-const COMMON_DISLIKES = ['king-prawns', 'salmon-fillets', 'lamb-mince', 'pork-sausages', 'avocados', 'peppers', 'chickpeas', 'feta', 'coriander', 'courgettes']
+const COMMON_DISLIKES = ['salmon-fillets', 'lamb-mince', 'peppers', 'avocados', 'asparagus', 'sweet-potatoes', 'black-beans', 'coconut-milk', 'peanut-butter', 'spinach']
 
 function Section({ title, hint, children }) {
   return (
@@ -75,7 +75,7 @@ export default function PreferencesForm({ prefs, onChange }) {
       </Section>
 
       <Section title="Proteins you enjoy" hint="Untick anything you'd rather we skipped.">
-        <Chips options={Object.entries(PROTEINS).map(([id, p]) => ({ id, label: p.label }))} value={prefs.proteins} onToggle={id => toggle('proteins', id)} />
+        <Chips options={Object.entries(PROTEINS).filter(([id]) => RECIPES.some(r => r.protein === id)).map(([id, p]) => ({ id, label: p.label }))} value={prefs.proteins} onToggle={id => toggle('proteins', id)} />
       </Section>
 
       <Section title="Longest you'll cook on a weeknight">

@@ -59,7 +59,7 @@ export default function RecipeSheet({ recipeId, onClose }) {
           <p className="text-ink-soft mt-2">{recipe.description}</p>
 
           <div className="flex flex-wrap gap-x-5 gap-y-2 mt-4 text-[15px]">
-            <span className="inline-flex items-center gap-1.5"><Clock size={17} className="text-tomato" />{recipe.mins} mins</span>
+            <span className="inline-flex items-center gap-1.5"><Clock size={17} className="text-tomato" />{recipe.mins} mins{recipe.activeMins ? ` (${recipe.activeMins} hands-on)` : ''}</span>
             <span className="inline-flex items-center gap-1.5"><Users size={17} className="text-tomato" />
               Serves {serves}{state.prefs.leftovers ? ' (incl. lunch)' : ''}</span>
           </div>

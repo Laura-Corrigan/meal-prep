@@ -19,6 +19,7 @@ const CONSTRAINT_KEYS = {
   preferProteins: v => Array.isArray(v) && v.every(isProtein),
   mustUse: v => Array.isArray(v) && v.every(id => id in INGREDIENTS),
   cheaper: v => typeof v === 'boolean',
+  maxCost: v => [1, 2, 3].includes(v),
   fun: v => typeof v === 'boolean',
 }
 
@@ -74,7 +75,10 @@ export function applyOps({ state, week: input, ops, today, rng }) {
 
   const replan = (days, constraints = {}, dayConstraints = {}) => {
     if (!days.length) return []
-    const picks = planDays({ state, week, days, constraints, dayConstraints, today, rng })
+    // Never hand back the meals we're replacing.
+    const replaced = days.map(d => week.days[d].recipeId).filter(Boolean)
+    const c = { ...constraints, exclude: [...(constraints.exclude || []), ...replaced] }
+    const picks = planDays({ state, week, days, constraints: c, dayConstraints, today, rng })
     const changed = []
     for (const d of days) {
       if (!picks[d]) continue
@@ -153,7 +157,7 @@ export function applyOps({ state, week: input, ops, today, rng }) {
       }
       case 'cheaper': {
         const swap = DAYS.filter(d => editable(d) && (recipeOn(d)?.cost || 1) >= 2)
-        const changed = replan(swap, { cheaper: true })
+        const changed = replan(swap, { cheaper: true, maxCost: 1 })
         summary.push(...(changed.length ? describe(changed) : ['This week is already budget-friendly']))
         break
       }

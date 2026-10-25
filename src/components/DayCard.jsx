@@ -93,7 +93,7 @@ export default function DayCard({ day }) {
             <h3 className="text-[19px] sm:text-xl leading-snug font-semibold">{recipe.name}</h3>
           </button>
           <p className="text-[13px] text-ink-soft mt-1 flex items-center gap-x-3 gap-y-0.5 flex-wrap">
-            <span className="inline-flex items-center gap-1"><Clock size={13} />{recipe.mins} mins</span>
+            <span className="inline-flex items-center gap-1"><Clock size={13} />{recipe.mins} mins{recipe.activeMins ? ` · ${recipe.activeMins} hands-on` : ''}</span>
             <span className="inline-flex items-center gap-1"><Users size={13} />Serves {servings(state.prefs)}</span>
           </p>
           <p className="text-[13px] text-ink-faint mt-0.5">{keyComponents(recipe).join(' · ')}</p>

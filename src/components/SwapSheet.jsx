@@ -71,7 +71,7 @@ export default function SwapSheet({ day, onClose }) {
             <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Search recipes"
               className="w-full h-11 px-4 rounded-full bg-paper border border-line focus:outline-none focus:border-ink-faint" />
             <div className="flex gap-2 overflow-x-auto no-scrollbar mt-3 -mx-5 px-5">
-              {[['all', 'All'], ...Object.entries(PROTEINS).map(([id, p]) => [id, p.label])].map(([id, label]) => (
+              {[['all', 'All'], ...Object.entries(PROTEINS).filter(([id]) => allRecipes(state).some(r => r.protein === id)).map(([id, p]) => [id, p.label])].map(([id, label]) => (
                 <button key={id} onClick={() => setProtein(id)} className={`${protein === id ? 'chip-on' : 'chip-off'} shrink-0`}>{label}</button>
               ))}
             </div>

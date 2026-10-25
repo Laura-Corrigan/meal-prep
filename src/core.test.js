@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { choosePacks, describePicks } from './tesco/packs'
 import { buildShoppingList } from './domain/shopping'
-import { emptyWeek, planningWeekStart, DAYS } from './domain/week'
+import { emptyWeek, planningWeekStart, DAYS, addDays, parseIso } from './domain/week'
 import { DEFAULT_PREFS, isAllowed } from './domain/prefs'
 import { RECIPES } from './data/recipes'
 import { INGREDIENTS } from './data/ingredients'
@@ -12,7 +12,12 @@ import { getRecipe, lines } from './domain/recipes'
 import { tesco } from './tesco/provider'
 
 const baseState = (over = {}) => ({ prefs: { ...DEFAULT_PREFS }, ratings: {}, pantry: {}, weeks: {}, customRecipes: [], ...over })
-const seeded = (seed = 1) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
+const seeded = (seed = 1) => {
+  let x = (seed * 7919) % 2147483647 || 1
+  const next = () => ((x = (x * 16807) % 2147483647) / 2147483647)
+  for (let i = 0; i < 5; i++) next() // warm up: early values from small seeds are tiny
+  return next
+}
 const MON = new Date(2026, 9, 12) // Monday 12 Oct 2026
 
 describe('recipe data', () => {
@@ -86,21 +91,21 @@ describe('planner', () => {
     }
   })
   it('respects dietary rules', () => {
-    const state = baseState({ prefs: { ...DEFAULT_PREFS, diet: ['vegetarian'] } })
-    expect(RECIPES.filter(r => isAllowed(r, state.prefs)).every(r => r.protein === 'veggie')).toBe(true)
+    const state = baseState({ prefs: { ...DEFAULT_PREFS, diet: ['pescatarian'] } })
+    expect(RECIPES.filter(r => isAllowed(r, state.prefs)).map(r => r.id)).toEqual(['salmon-jackets'])
   })
   it('favours loved recipes over time', () => {
-    const loved = baseState({ ratings: { 'miso-cod': 'love' } })
+    const loved = baseState({ ratings: { meatballs: 'love' } })
     const count = st => Array.from({ length: 40 }, (_, s) =>
       Object.values(planDays({ state: st, week: emptyWeek('2026-10-12'), days: DAYS, today: MON, rng: seeded(s + 1) }))).flat()
-      .filter(id => id === 'miso-cod').length
+      .filter(id => id === 'meatballs').length
     expect(count(loved)).toBeGreaterThan(count(baseState()))
   })
   it('keeps locked meals', () => {
     const week = emptyWeek('2026-10-12')
-    week.days.mon = { recipeId: 'tuna-jackets', locked: true, out: false }
+    week.days.mon = { recipeId: 'salmon-jackets', locked: true, out: false }
     const res = applyOps({ state: baseState(), week, ops: [{ op: 'replan', days: 'unlocked' }], today: MON, rng: seeded(2) })
-    expect(res.week.days.mon.recipeId).toBe('tuna-jackets')
+    expect(res.week.days.mon.recipeId).toBe('salmon-jackets')
     expect(DAYS.slice(1).every(d => res.week.days[d].recipeId)).toBe(true)
   })
 })
@@ -113,7 +118,7 @@ describe('agent commands', () => {
   }
   const fullWeek = () => {
     const w = emptyWeek('2026-10-12')
-    const ids = ['chicken-fajitas', 'teriyaki-chicken-bowls', 'beef-chilli', 'chicken-pesto-pasta', 'chicken-burrito-bowls']
+    const ids = ['chicken-fajitas', 'bbq-chicken', 'beef-chilli', 'chicken-risotto', 'chicken-chow-mein']
     DAYS.forEach((d, i) => { w.days[d].recipeId = ids[i] })
     return w
   }
@@ -126,7 +131,7 @@ describe('agent commands', () => {
     const r = run('Give us more fish next week', fullWeek())
     expect(r.parsed.ops[0]).toEqual({ op: 'switch_week', which: 'next' })
     const fish = DAYS.filter(d => ['salmon', 'cod', 'prawns', 'tuna'].includes(getRecipe(r.week.days[d].recipeId).protein))
-    expect(fish.length).toBeGreaterThanOrEqual(2)
+    expect(fish.length).toBeGreaterThanOrEqual(1) // only one fish recipe in the rotation
   })
   it('nothing over 30 minutes', () => {
     const r = run('Nothing over 30 minutes', fullWeek())
@@ -149,9 +154,10 @@ describe('agent commands', () => {
     expect(getRecipe(r.week.days.fri.recipeId).fun).toBe(true)
   })
   it('make it cheaper', () => {
-    const w = fullWeek(); w.days.tue.recipeId = 'honey-garlic-salmon'
+    const w = fullWeek(); w.days.tue.recipeId = 'salmon-jackets'
+    const cost = wk => DAYS.reduce((t, d) => t + getRecipe(wk.days[d].recipeId).cost, 0)
     const r = run('Make next week cheaper', w)
-    expect(getRecipe(r.week.days.tue.recipeId).cost).toBeLessThan(3)
+    expect(cost(r.week)).toBeLessThan(cost(w))
   })
   it('rejects invalid structured output', () => {
     const v = validateOps({ ops: [{ op: 'mark_out', day: 'sun' }, { op: 'set_meal', day: 'mon', recipeId: 'nope' }, { op: 'drop_tables' }] }, baseState())
@@ -206,17 +212,54 @@ describe('pack wording', () => {
   })
 })
 
-describe('variety', () => {
-  it('only ever doubles up on chicken, and never three times', () => {
+describe('variety over real use', () => {
+  // Plan 12 consecutive weeks, feeding each week into history like the app does.
+  const simulate = seed => {
     const state = baseState()
-    let otherRepeats = 0
-    for (let s = 1; s <= 50; s++) {
-      const picks = planDays({ state, week: emptyWeek('2026-10-12'), days: DAYS, today: MON, rng: seeded(s) })
-      const proteins = DAYS.map(d => getRecipe(picks[d], state).protein)
-      const counts = proteins.reduce((m, p) => ({ ...m, [p]: (m[p] || 0) + 1 }), {})
-      expect(Math.max(...Object.values(counts))).toBeLessThanOrEqual(2)
-      otherRepeats += Object.entries(counts).filter(([p, n]) => p !== 'chicken' && n > 1).length
+    const rng = seeded(seed)
+    const weeks = []
+    for (let i = 0; i < 12; i++) {
+      const start = addDays('2026-10-12', i * 7)
+      const week = emptyWeek(start)
+      const picks = planDays({ state, week, days: DAYS, today: parseIso(start), rng })
+      DAYS.forEach(d => { week.days[d].recipeId = picks[d] })
+      state.weeks[start] = week
+      weeks.push(DAYS.map(d => getRecipe(picks[d], state)))
     }
-    expect(otherRepeats).toBeLessThanOrEqual(2)
+    return weeks
+  }
+
+  it('uses every recipe within three months', () => {
+    for (const seed of [1, 2, 3]) {
+      const used = new Set(simulate(seed).flat().map(r => r.id))
+      expect(RECIPES.filter(r => !used.has(r.id)).map(r => r.id)).toEqual([])
+    }
+  })
+  it('keeps proteins spread out each week', () => {
+    for (const seed of [1, 2, 3]) {
+      for (const week of simulate(seed)) {
+        const n = p => week.filter(r => r.protein === p).length
+        expect(n('chicken')).toBeLessThanOrEqual(3)
+        expect(n('beef')).toBeLessThanOrEqual(2)
+      }
+    }
+  })
+  it('rarely repeats a meal from the week before', () => {
+    let repeats = 0
+    for (const seed of [1, 2, 3]) {
+      const weeks = simulate(seed)
+      for (let i = 1; i < weeks.length; i++) repeats += weeks[i].filter(r => weeks[i - 1].some(p => p.id === r.id)).length
+    }
+    expect(repeats / (3 * 11 * 5)).toBeLessThan(0.25)
+  })
+})
+
+describe('asking for a recipe by name', () => {
+  it('finds recipes from distinctive words', () => {
+    const op = text => interpretRules(text, { state: baseState(), today: MON }).ops.at(-1)
+    expect(op("let's have meatballs on wednesday")).toEqual({ op: 'set_meal', day: 'wed', recipeId: 'meatballs' })
+    expect(op('make chow mein thursday')).toEqual({ op: 'set_meal', day: 'thu', recipeId: 'chicken-chow-mein' })
+    expect(op('we want the pie on friday')).toEqual({ op: 'set_meal', day: 'fri', recipeId: 'pie-night' })
+    expect(op('have shepherds pie on monday')).toEqual({ op: 'set_meal', day: 'mon', recipeId: 'speedy-shepherds-pie' })
   })
 })

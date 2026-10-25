@@ -3,6 +3,7 @@ import { AppContext } from './context'
 import { useAppState } from './store/useAppState'
 import { addDays, emptyWeek, mondayOf, parseIso, planningWeekStart } from './domain/week'
 import { applyOps, interpret } from './agent'
+import { getRecipe } from './domain/recipes'
 import Setup from './components/Setup'
 import Home from './components/Home'
 import RecipeSheet from './components/RecipeSheet'
@@ -23,7 +24,13 @@ export default function App() {
   const today = useMemo(getToday, [])
   const thisWeek = mondayOf(today)
   const [weekStart, setWeekStart] = useState(() => planningWeekStart(today))
-  const week = state.weeks[weekStart] || emptyWeek(weekStart)
+  // Plans can reference recipes that have since been removed: treat those days as empty.
+  const week = useMemo(() => {
+    const w = state.weeks[weekStart] || emptyWeek(weekStart)
+    const days = Object.fromEntries(Object.entries(w.days).map(([d, slot]) =>
+      [d, slot.recipeId && !getRecipe(slot.recipeId, state) ? { ...slot, recipeId: null, locked: false } : slot]))
+    return { ...w, days }
+  }, [state, weekStart])
 
   const [page, setPage] = useState('home')         // home | shopping | tesco | settings
   const [recipeId, setRecipeId] = useState(null)   // recipe sheet

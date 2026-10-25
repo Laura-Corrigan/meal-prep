@@ -72,11 +72,12 @@ export function scoreRecipe(recipe, ctx) {
     if (other.carb === recipe.carb) s -= 0.35
   }
 
-  if (recipe.mins >= 20 && recipe.mins <= 35) s += 0.3
-  if (recipe.mins > 40) s -= 0.3
+  const handsOn = recipe.activeMins ?? recipe.mins // after work, effort matters more than oven time
+  if (handsOn >= 10 && handsOn <= 35) s += 0.3
+  if (handsOn > 40) s -= 0.3
   if (recipe.proteinG >= 35) s += 0.2
 
-  if (day === 'fri' && recipe.fun) s += 1.6
+  if (day === 'fri' && recipe.fun) s += 2.4
   if (c.fun) s += recipe.fun ? 3 : -1
 
   const cheaper = c.cheaper || prefs.budget === 'thrifty'
@@ -103,7 +104,7 @@ export function scoreRecipe(recipe, ctx) {
 
 /**
  * Fill `days` of `week`, keeping every other day as-is.
- * constraints: global { maxMins, proteins, avoidProteins, preferProteins, mustUse, cheaper, fun, exclude }
+ * constraints: global { maxMins, maxCost, proteins, avoidProteins, preferProteins, mustUse, cheaper, fun, exclude }
  * dayConstraints: { fri: { fun: true }, ... } merged over the global ones for that day.
  */
 export function planDays({ state, week, days, constraints = {}, dayConstraints = {}, today = new Date(), rng = Math.random }) {
@@ -128,6 +129,7 @@ export function planDays({ state, week, days, constraints = {}, dayConstraints =
     const base = library.filter(r => !used.has(r.id) && !(c.exclude || []).includes(r.id) && isAllowed(r, prefs, ratings))
     const strict = base.filter(r =>
       (!c.maxMins || r.mins <= c.maxMins) &&
+      (!c.maxCost || r.cost <= c.maxCost) &&
       (!c.proteins?.length || matchesProtein(r, c.proteins)) &&
       (!c.avoidProteins?.length || !matchesProtein(r, c.avoidProteins)))
     const pool = strict.length ? strict : base
@@ -136,6 +138,7 @@ export function planDays({ state, week, days, constraints = {}, dayConstraints =
     const spare = spareFromPacks(chosen, factor)
     const scored = pool
       .map(r => ({ r, ...scoreRecipe(r, { chosen, ratings, recent, day, c, spare, factor, prefs }) }))
+      .map(x => ({ ...x, score: x.score + rng() * 0.4 })) // break ties so every recipe gets a turn
       .sort((a, b) => b.score - a.score)
 
     // Weighted pick among the best few so "regenerate" gives variety.
