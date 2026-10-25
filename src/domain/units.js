@@ -34,6 +34,7 @@ export function formatQty(qty, unit) {
     case 'clove': return `${nice(qty)} clove${qty > 1 ? 's' : ''}`
     case 'cm': return `${nice(qty)}cm`
     case 'tin': return `${nice(qty)} tin${qty > 1 ? 's' : ''}`
+    case 'pouch': return `${nice(qty)} pouch${qty > 1 ? 'es' : ''}`
     case 'handful': return `${nice(qty)} handful${qty > 1 ? 's' : ''}`
     case 'tbsp': case 'tsp': return `${nice(qty)} ${unit}`
     default: return nice(qty)

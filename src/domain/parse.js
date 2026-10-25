@@ -1,10 +1,10 @@
 import { ALIASES, INGREDIENTS, ingredient } from '../data/ingredients'
 import { toBase } from './units'
 
-const UNIT = '(kg|g|ml|l|litres?|tbsp|tsp|cloves?|tins?|cans?|cm|handfuls?)'
+const UNIT = '(kg|g|ml|l|litres?|tbsp|tsp|cloves?|tins?|cans?|cm|handfuls?|pouch(?:es)?|packs?)'
 const LINE = new RegExp(`^(\\d+(?:\\.\\d+)?|½|¼|¾)\\s*${UNIT}?\\.?\\s*(?:of\\s+)?(.+)$`, 'i')
 const FRACTIONS = { '½': 0.5, '¼': 0.25, '¾': 0.75 }
-const SINGULAR = { cloves: 'clove', tins: 'tin', cans: 'tin', can: 'tin', handfuls: 'handful', litres: 'l', litre: 'l' }
+const SINGULAR = { cloves: 'clove', tins: 'tin', cans: 'tin', can: 'tin', handfuls: 'handful', litres: 'l', litre: 'l', pouches: 'pouch', packs: 'pouch', pack: 'pouch' }
 
 function matchIngredient(name) {
   const n = name.toLowerCase().replace(/\(.*?\)/g, '').trim()
