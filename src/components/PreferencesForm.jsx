@@ -10,7 +10,7 @@ const COMMON_DISLIKES = ['salmon-fillets', 'lamb-mince', 'peppers', 'avocados', 
 function Section({ title, hint, children }) {
   return (
     <section className="py-5 border-b border-line last:border-0">
-      <h3 className="font-sans text-[15px] font-semibold">{title}</h3>
+      <h3 className="font-sans text-[15px]">{title}</h3>
       {hint && <p className="text-sm text-ink-faint mt-0.5">{hint}</p>}
       <div className="mt-3">{children}</div>
     </section>

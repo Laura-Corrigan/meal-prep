@@ -11,6 +11,9 @@ import SwapSheet from './components/SwapSheet'
 import ShoppingPage from './components/ShoppingPage'
 import TescoFlow from './components/TescoFlow'
 import Settings from './components/Settings'
+import RecipesPage from './components/RecipesPage'
+import AskSheet from './components/AskSheet'
+import { TabBar, TAB_PAGES } from './components/Layout'
 import { Toast } from './components/ui'
 
 // ?today=2026-10-10 lets us test weekend/weekday behaviour.
@@ -32,15 +35,17 @@ export default function App() {
     return { ...w, days }
   }, [state, weekStart])
 
-  const [page, setPage] = useState('home')         // home | shopping | tesco | settings
+  const [page, setPage] = useState('home')         // tabs: home | shopping | recipes; pages: tesco | settings
   const [recipeId, setRecipeId] = useState(null)   // recipe sheet
   const [swapDay, setSwapDay] = useState(null)     // swap sheet
+  const [askOpen, setAskOpen] = useState(false)    // plain-English changes
   const [toast, setToast] = useState(null)
   const closeToast = useCallback(() => setToast(null), [])
 
   // Phone back button closes the top sheet/page instead of leaving the app:
   // every open layer owns one history entry.
-  const depth = (page === 'home' ? 0 : page === 'tesco' ? 2 : 1) + (swapDay ? 1 : 0) + (recipeId ? 1 : 0)
+  // Tabs are the base level; full-screen pages and sheets stack on top.
+  const depth = (TAB_PAGES.includes(page) ? 0 : 1) + (swapDay ? 1 : 0) + (recipeId ? 1 : 0) + (askOpen ? 1 : 0)
   const pushedDepth = useRef(0)
   useEffect(() => {
     while (pushedDepth.current < depth) { history.pushState({ depth: pushedDepth.current + 1 }, ''); pushedDepth.current++ }
@@ -48,10 +53,11 @@ export default function App() {
   }, [depth])
   const closeTop = useCallback(() => {
     if (recipeId) setRecipeId(null)
+    else if (askOpen) setAskOpen(false)
     else if (swapDay) setSwapDay(null)
     else if (page === 'tesco') setPage('shopping')
-    else setPage('home')
-  }, [recipeId, swapDay, page])
+    else if (page === 'settings') setPage('home')
+  }, [recipeId, askOpen, swapDay, page])
   useEffect(() => {
     const onPop = () => { pushedDepth.current = Math.max(0, pushedDepth.current - 1); closeTop() }
     addEventListener('popstate', onPop)
@@ -137,7 +143,8 @@ export default function App() {
 
   const ctx = {
     state, week, weekStart, setWeekStart, thisWeek, today, sync, actions,
-    openRecipe: setRecipeId, openSwap: setSwapDay, go: setPage, back, setToast, reset,
+    page, openRecipe: setRecipeId, openSwap: setSwapDay, openAsk: () => setAskOpen(true),
+    go: p => { setPage(p); window.scrollTo(0, 0) }, back, setToast, reset,
   }
 
   if (!state.onboarded) {
@@ -148,10 +155,13 @@ export default function App() {
     <AppContext.Provider value={ctx}>
       {page === 'home' && <Home />}
       {page === 'shopping' && <ShoppingPage />}
+      {page === 'recipes' && <RecipesPage />}
       {page === 'tesco' && <TescoFlow />}
       {page === 'settings' && <Settings />}
+      {TAB_PAGES.includes(page) && <TabBar />}
       <RecipeSheet recipeId={recipeId} onClose={back} />
       <SwapSheet day={swapDay} onClose={back} />
+      <AskSheet open={askOpen} onClose={back} />
       <Toast toast={toast} onClose={closeToast} />
     </AppContext.Provider>
   )

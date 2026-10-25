@@ -12,7 +12,7 @@ import { syncEnabled } from '../store/sync'
 function Card({ title, hint, children }) {
   return (
     <section className="card p-5 mt-4">
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <h2 className="text-lg">{title}</h2>
       {hint && <p className="text-sm text-ink-faint mt-0.5">{hint}</p>}
       <div className="mt-3">{children}</div>
     </section>
@@ -74,7 +74,7 @@ export default function Settings() {
       <header className="sticky top-0 z-20 bg-cream/90 backdrop-blur border-b border-line">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
           <button aria-label="Back" onClick={back} className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center hover:bg-paper"><ArrowLeft size={20} /></button>
-          <h1 className="text-xl font-semibold">Settings</h1>
+          <h1 className="text-xl">Settings</h1>
         </div>
       </header>
       <main className="max-w-2xl mx-auto px-4 sm:px-6">

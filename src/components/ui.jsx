@@ -14,14 +14,14 @@ export function Sheet({ open, onClose, title, children, full = false, footer }) 
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-ink/40 anim-fade" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 anim-fade" onClick={onClose} />
       <div
         role="dialog" aria-modal="true" aria-label={title}
-        className={`relative w-full sm:max-w-xl bg-cream anim-rise flex flex-col ${full ? 'h-[100dvh] sm:h-[92vh] sm:rounded-3xl' : 'max-h-[88dvh] rounded-t-3xl sm:rounded-3xl'} overflow-hidden`}
+        className={`relative w-full sm:max-w-xl bg-white anim-rise flex flex-col ${full ? 'h-[100dvh] sm:h-[92vh] sm:rounded-3xl' : 'max-h-[88dvh] rounded-t-3xl sm:rounded-3xl'} overflow-hidden`}
       >
         {title && (
           <div className="flex items-center justify-between px-5 pt-5 pb-3">
-            <h2 className="text-xl font-semibold">{title}</h2>
+            <h2 className="text-xl font-extrabold">{title}</h2>
             <IconButton label="Close" onClick={onClose}><X size={20} /></IconButton>
           </div>
         )}
@@ -49,7 +49,7 @@ export function FoodImage({ recipe, className = '', width = 400, rounded = 'roun
   const [failed, setFailed] = useState(null)
   if (!recipe?.image?.src || failed === recipe.image.src) {
     return (
-      <div className={`${className} ${rounded} bg-butter flex items-center justify-center text-tomato/60`}>
+      <div className={`${className} ${rounded} bg-mist flex items-center justify-center text-ink-faint`}>
         <UtensilsCrossed size={28} />
       </div>
     )
@@ -62,7 +62,7 @@ export function FoodImage({ recipe, className = '', width = 400, rounded = 'roun
       key={src} src={src} srcSet={srcSet} sizes={srcSet ? '(min-width: 672px) 672px, 100vw' : undefined}
       alt={recipe.name} loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : undefined}
       onError={() => setFailed(recipe.image.src)}
-      className={`${className} ${rounded} object-cover bg-butter`}
+      className={`${className} ${rounded} object-cover bg-mist`}
     />
   )
 }
@@ -90,7 +90,7 @@ export function Toast({ toast, onClose }) {
   }, [toast, onClose])
   if (!toast) return null
   return (
-    <div className="fixed left-0 right-0 bottom-24 z-40 flex justify-center px-4 pointer-events-none">
+    <div className="fixed left-0 right-0 bottom-[calc(9.5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 pointer-events-none">
       <div role="status" className="pointer-events-auto anim-rise max-w-md w-full bg-ink text-white rounded-2xl shadow-lift px-4 py-3 flex items-start gap-3">
         <div className="flex-1 text-sm leading-relaxed">
           {toast.title && <p className="font-semibold">{toast.title}</p>}

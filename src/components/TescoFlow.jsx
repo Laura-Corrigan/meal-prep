@@ -33,7 +33,7 @@ export default function TescoFlow() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-3">
           <button aria-label="Back" onClick={back} className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center hover:bg-paper"><ArrowLeft size={20} /></button>
           <div className="flex-1">
-            <h1 className="text-xl font-semibold leading-none">Tesco shop</h1>
+            <h1 className="text-xl leading-none">Tesco shop</h1>
             <p className="text-xs text-ink-faint mt-1">{done} of {items.length} done</p>
           </div>
         </div>
@@ -42,16 +42,16 @@ export default function TescoFlow() {
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6">
         {done === 0 && (
-          <div className="mt-4 flex gap-3 text-sm text-ink-soft bg-paper border border-line rounded-2xl p-4">
+          <div className="mt-4 flex gap-3 text-sm text-ink-soft border border-line rounded-2xl p-4">
             <Info size={18} className="shrink-0 mt-0.5 text-ink-faint" />
             <p>Tesco doesn't let other apps fill your basket, so we open each item in Tesco for you. Sign in to Tesco first, add the item, then come back and tap <strong>Added</strong>.</p>
           </div>
         )}
 
         {current ? (
-          <section className="card p-5 mt-4 anim-rise" key={current.id}>
+          <section className="rounded-3xl bg-mist p-5 mt-4 anim-rise" key={current.id}>
             <p className="eyebrow">{CATEGORIES.find(c => c.id === current.cat)?.label}</p>
-            <h2 className="text-2xl font-semibold mt-1">{current.name}</h2>
+            <h2 className="text-2xl mt-1">{current.name}</h2>
             <p className="text-ink-soft mt-1">
               {current.packText ? <>Buy <strong className="text-ink">{current.packText}</strong></> : 'Buy 1'}
               {current.qtyText && <span className="text-ink-faint"> · need {current.qtyText}</span>}
@@ -59,12 +59,12 @@ export default function TescoFlow() {
             <p className="text-sm text-ink-faint mt-0.5">For {current.daysText}</p>
 
             <a href={tesco.linkFor(current, state.tescoProducts)} target="_blank" rel="noopener noreferrer"
-              className="btn-primary w-full h-12 text-base mt-5">
+              className="btn-accent w-full h-14 text-base mt-5">
               {remembered(current.id) ? 'Open your usual product' : 'Find in Tesco'} <ExternalLink size={17} />
             </a>
             <div className="grid grid-cols-2 gap-2 mt-2">
-              <button className="btn-dark" onClick={() => mark(current, true)}><Check size={17} /> Added</button>
-              <button className="btn-ghost" onClick={() => mark(current, 'skip')}><SkipForward size={16} /> Skip</button>
+              <button className="btn-primary" onClick={() => mark(current, true)}><Check size={17} /> Added</button>
+              <button className="btn-ghost !bg-white" onClick={() => mark(current, 'skip')}><SkipForward size={16} /> Skip</button>
             </div>
 
             {!pasting ? (
@@ -83,20 +83,20 @@ export default function TescoFlow() {
             )}
           </section>
         ) : (
-          <section className="card p-6 mt-4 text-center anim-rise">
+          <section className="rounded-3xl bg-mist p-6 mt-4 text-center anim-rise">
             <PartyPopper size={32} className="mx-auto text-tomato" />
-            <h2 className="text-2xl font-semibold mt-2">{week.tesco?.done ? 'Order placed' : 'Basket built'}</h2>
+            <h2 className="text-2xl mt-2">{week.tesco?.done ? 'Order placed' : 'Basket built'}</h2>
             {!week.tesco?.done ? (
               <>
                 <p className="text-ink-soft mt-2">Check out in Tesco and choose a <strong>Monday morning</strong> delivery slot.</p>
-                <a href={tesco.basketUrl()} target="_blank" rel="noopener noreferrer" className="btn-ghost w-full mt-5">Open Tesco basket <ExternalLink size={16} /></a>
-                <button className="btn-primary w-full h-12 mt-2" onClick={() => { actions.tescoDone(true); go('home') }}>I've placed the order</button>
+                <a href={tesco.basketUrl()} target="_blank" rel="noopener noreferrer" className="btn-ghost !bg-white w-full mt-5">Open Tesco basket <ExternalLink size={16} /></a>
+                <button className="btn-primary w-full h-14 mt-2" onClick={() => { actions.tescoDone(true); go('home') }}>I've placed the order</button>
                 <p className="text-xs text-ink-faint mt-3">We can't see your Tesco account, so we only know what you tell us.</p>
               </>
             ) : (
               <>
                 <p className="text-ink-soft mt-2">Marked as placed. Enjoy the week!</p>
-                <button className="btn-ghost w-full mt-5" onClick={() => actions.tescoDone(false)}>Not placed yet</button>
+                <button className="btn-ghost !bg-white w-full mt-5" onClick={() => actions.tescoDone(false)}>Not placed yet</button>
               </>
             )}
           </section>
@@ -104,13 +104,13 @@ export default function TescoFlow() {
 
         <section className="mt-6">
           <h2 className="eyebrow mb-2">Everything</h2>
-          <ul className="card divide-y divide-line">
+          <ul className="divide-y divide-line">
             {items.map(i => {
               const s = status[i.id]
               return (
                 <li key={i.id}>
                   <button onClick={() => { if (s) actions.tescoAdded(i.id, false); setFocus(i.id) }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left ${current?.id === i.id ? 'bg-butter/60' : ''}`}>
+                    className={`w-full flex items-center gap-3 py-3.5 text-left ${current?.id === i.id ? 'font-bold' : ''}`}>
                     <span className={`w-5 h-5 rounded-full shrink-0 flex items-center justify-center ${s === true ? 'bg-sage text-white' : s === 'skip' ? 'bg-line text-ink-faint' : 'border-2 border-line'}`}>
                       {s === true && <Check size={12} strokeWidth={3} />}{s === 'skip' && <SkipForward size={10} />}
                     </span>

@@ -11,8 +11,8 @@ export default function Setup() {
   return (
     <div className="min-h-[100dvh] bg-cream">
       <div className="max-w-xl mx-auto px-5 pt-10 pb-32">
-        <p className="eyebrow text-tomato">What's for tea?</p>
-        <h1 className="text-[34px] leading-tight font-semibold mt-2">Weeknight dinners, sorted in five minutes.</h1>
+        <p className="eyebrow">What's for tea?</p>
+        <h1 className="text-[34px] leading-tight mt-2">Weeknight dinners, sorted in five minutes.</h1>
         <p className="text-ink-soft mt-3">
           A few quick questions, then we'll suggest Monday to Friday and build your Tesco list. You can change all of this later.
         </p>
