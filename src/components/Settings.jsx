@@ -25,17 +25,18 @@ const PANTRY_CANDIDATES = Object.entries(INGREDIENTS)
 
 function AddRecipe({ open, onClose }) {
   const { actions, setToast } = useApp()
-  const [f, setF] = useState({ name: '', mins: 30, protein: 'chicken', ingredients: '', steps: '' })
+  const [f, setF] = useState({ name: '', mins: 30, protein: 'chicken', ingredients: '', steps: '', link: '' })
   const set = (k, v) => setF(x => ({ ...x, [k]: v }))
   const save = () => {
     const ingredients = f.ingredients.split('\n').map(parseIngredientLine).filter(Boolean)
     actions.addRecipe({
       id: `custom-${Date.now()}`, custom: true, name: f.name.trim(), description: '',
       mins: Number(f.mins) || 30, protein: f.protein, cuisine: 'other', carb: null, method: 'hob', cost: 2,
+      link: /^https?:\/\//.test(f.link.trim()) ? { url: f.link.trim(), similar: false } : undefined,
       ingredients, steps: f.steps.split('\n').map(s => s.replace(/^\s*\d+[.)]\s*/, '').trim()).filter(Boolean),
     })
     setToast({ title: `${f.name} added to your recipes` })
-    setF({ name: '', mins: 30, protein: 'chicken', ingredients: '', steps: '' })
+    setF({ name: '', mins: 30, protein: 'chicken', ingredients: '', steps: '', link: '' })
     onClose()
   }
   const input = 'w-full px-4 py-3 rounded-2xl bg-paper border border-line focus:outline-none focus:border-ink-faint'
@@ -52,6 +53,7 @@ function AddRecipe({ open, onClose }) {
         </div>
         <textarea className={input} rows={6} placeholder={'Ingredients for 4, one per line\n500g chicken breast, sliced\n2 peppers\n1 tin chopped tomatoes'} value={f.ingredients} onChange={e => set('ingredients', e.target.value)} />
         <textarea className={input} rows={5} placeholder="Steps, one per line" value={f.steps} onChange={e => set('steps', e.target.value)} />
+        <input className={input} type="url" inputMode="url" placeholder="Recipe link, e.g. BBC Good Food (optional)" value={f.link} onChange={e => set('link', e.target.value)} />
       </div>
     </Sheet>
   )
