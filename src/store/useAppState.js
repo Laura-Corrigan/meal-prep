@@ -37,22 +37,36 @@ function saveLocal(state) {
   try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* private mode etc. */ }
 }
 
-// A shared link (?h=<id>) joins this phone to an existing household.
+// The household id also lives in the address (?h=<id>). Phones can wipe a
+// site's saved data (private browsing, in-app browsers, blocked cookies), so
+// a bookmark or home-screen icon carrying the id can always find the plan
+// again in the cloud. Sharing that link is also how a second phone joins.
 function linkedHousehold() {
   const h = new URLSearchParams(location.search).get('h')
-  if (!h || h.length < 20) return null
-  const url = new URL(location.href)
-  url.searchParams.delete('h')
-  history.replaceState(null, '', url)
-  return h
+  return h && h.length >= 20 ? h : null
+}
+
+function putHouseholdInAddress(id) {
+  try {
+    const url = new URL(location.href)
+    if (url.searchParams.get('h') === id) return
+    url.searchParams.set('h', id)
+    history.replaceState(history.state, '', url)
+  } catch { /* ignore */ }
 }
 
 export function useAppState() {
-  const [state, setState] = useState(() => {
-    const local = loadLocal() || defaultState()
+  const [boot] = useState(() => {
+    const local = loadLocal()
     const joined = linkedHousehold()
-    return joined && joined !== local.householdId ? { ...local, householdId: joined, updatedAt: 0 } : local
+    const base = local || defaultState()
+    const state = joined && joined !== base.householdId ? { ...base, householdId: joined, updatedAt: 0 } : base
+    // Opened with a household in the address but nothing saved on this phone:
+    // fetch the plan before showing anything, rather than the setup questions.
+    return { state, restoring: syncEnabled && !!joined && !(local?.onboarded && local.householdId === joined) }
   })
+  const [state, setState] = useState(boot.state)
+  const [restoring, setRestoring] = useState(boot.restoring)
   const [sync, setSync] = useState(syncEnabled ? 'connecting' : 'local')
   const pushTimer = useRef(null)
   const latest = useRef(state)
@@ -82,8 +96,16 @@ export function useAppState() {
       setSync('synced')
     } catch {
       setSync('offline')
+    } finally {
+      setRestoring(false)
     }
   }, [])
+
+  // Once set up, keep the household in the address so bookmarks and
+  // home-screen icons always reopen this plan.
+  useEffect(() => {
+    if (state.onboarded && syncEnabled) putHouseholdInAddress(state.householdId)
+  }, [state.onboarded, state.householdId])
 
   useEffect(() => {
     refresh()
@@ -106,10 +128,11 @@ export function useAppState() {
   }, [update])
 
   const reset = useCallback(() => {
+    try { const url = new URL(location.href); url.searchParams.delete('h'); history.replaceState(history.state, '', url) } catch { /* ignore */ }
     const fresh = { ...defaultState(), householdId: newId() }
     saveLocal(fresh)
     setState(fresh)
   }, [])
 
-  return { state, update, updateWeek, reset, sync, refresh }
+  return { state, update, updateWeek, reset, sync, refresh, restoring }
 }

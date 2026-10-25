@@ -23,7 +23,7 @@ function getToday() {
 }
 
 export default function App() {
-  const { state, update, updateWeek, reset, sync } = useAppState()
+  const { state, update, updateWeek, reset, sync, restoring } = useAppState()
   const today = useMemo(getToday, [])
   const thisWeek = mondayOf(today)
   const [weekStart, setWeekStart] = useState(() => planningWeekStart(today))
@@ -145,6 +145,15 @@ export default function App() {
     state, week, weekStart, setWeekStart, thisWeek, today, sync, actions,
     page, openRecipe: setRecipeId, openSwap: setSwapDay, openAsk: () => setAskOpen(true),
     go: p => { setPage(p); window.scrollTo(0, 0) }, back, setToast, reset,
+  }
+
+  if (restoring && !state.onboarded) {
+    return (
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-3 text-ink-faint">
+        <span className="w-8 h-8 rounded-full border-[3px] border-line border-t-ink animate-spin" />
+        <p className="text-sm font-semibold">Loading your plan…</p>
+      </div>
+    )
   }
 
   if (!state.onboarded) {
