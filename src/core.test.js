@@ -263,3 +263,11 @@ describe('asking for a recipe by name', () => {
     expect(op('have shepherds pie on monday')).toEqual({ op: 'set_meal', day: 'mon', recipeId: 'speedy-shepherds-pie' })
   })
 })
+
+describe('recipe links', () => {
+  it('only links to BBC Good Food recipe pages', () => {
+    const linked = RECIPES.filter(r => r.link)
+    expect(linked.length).toBe(12)
+    linked.forEach(r => expect(r.link.url).toMatch(/^https:\/\/www\.bbcgoodfood\.com\/recipes\/[a-z0-9-]+$/))
+  })
+})

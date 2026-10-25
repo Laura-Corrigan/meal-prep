@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Clock, Users, Check, Sun } from 'lucide-react'
+import { ArrowLeft, Clock, Users, Check, Sun, ExternalLink } from 'lucide-react'
 import { useApp } from '../context'
 import { FoodImage } from './ui'
 import { RatingButtons } from './DayCard'
@@ -7,6 +7,20 @@ import { getRecipe, lines, tags, keyComponents, RECIPE_SERVINGS } from '../domai
 import { servings } from '../domain/prefs'
 import { ingredient } from '../data/ingredients'
 import { formatQty } from '../domain/units'
+
+// "1 red onion", "2 red onions"
+function displayName(ing, qty) {
+  const name = ing.name.toLowerCase()
+  if (!ing.plural || qty == null || qty > 1) return name
+  return name.replace(/oes$/, 'o').replace(/s$/, '')
+}
+
+export function sourceName(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, '')
+    return host === 'bbcgoodfood.com' ? 'BBC Good Food' : host
+  } catch { return 'the original' }
+}
 
 function useWakeLock(on) {
   const lock = useRef(null)
@@ -71,6 +85,19 @@ export default function RecipeSheet({ recipeId, onClose }) {
             {recipe.kcal && <> · approx. {recipe.kcal} kcal, {recipe.proteinG}g protein per serving</>}
           </p>
 
+          {recipe.link?.url && (
+            <a href={recipe.link.url} target="_blank" rel="noopener noreferrer"
+              className="mt-4 flex items-center justify-between gap-3 card px-4 py-3 hover:shadow-lift transition">
+              <span>
+                <span className="block font-semibold">{recipe.link.similar ? 'Similar recipe' : 'Full recipe'} on {sourceName(recipe.link.url)}</span>
+                <span className="block text-xs text-ink-faint">
+                  {recipe.link.similar ? 'A related dish, if you want more detail or ideas' : 'More detail, tips and reviews'}
+                </span>
+              </span>
+              <ExternalLink size={18} className="text-tomato shrink-0" />
+            </a>
+          )}
+
           <section className="mt-7">
             <h2 className="text-xl font-semibold">Ingredients</h2>
             <ul className="mt-3 card divide-y divide-line">
@@ -85,7 +112,7 @@ export default function RecipeSheet({ recipeId, onClose }) {
                         {on && <Check size={12} strokeWidth={3} />}
                       </span>
                       <span className={`flex-1 ${on ? 'line-through text-ink-faint' : ''}`}>
-                        {ing ? <>{qty && <strong className="font-semibold">{qty} </strong>}{ing.name.toLowerCase()}</> : l.text}
+                        {ing ? <>{qty && <strong className="font-semibold">{qty} </strong>}{displayName(ing, l.qty * factor)}</> : l.text}
                         {l.note && <span className="text-ink-faint">, {l.note}</span>}
                       </span>
                       {ing?.pantry && <span className="text-xs text-ink-faint">cupboard</span>}

@@ -5,6 +5,8 @@
 // standard UK nutrition values — shown in the UI as approximate.
 //
 // Images: Unsplash (free licence), credited per recipe.
+// link: the matching BBC Good Food recipe for the full version (similar: true
+// when it's a related dish rather than the same one). We link, never copy.
 
 const img = (path, credit) => ({ src: `https://images.unsplash.com/${path}`, credit })
 
@@ -16,6 +18,7 @@ export const RECIPES = [
     mins: 40, activeMins: 15, protein: 'beef', cuisine: 'mexican', carb: 'rice', method: 'one-pan', cost: 1,
     kcal: 620, proteinG: 42,
     image: img('photo-1658308766948-01c85ade2737', 'Svitlana'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/chilli-con-carne-recipe', similar: false },
     ingredients: [['beef-mince', 500], ['onions', 1, 'diced'], ['peppers', 1, 'diced'], ['garlic', 2, 'crushed'], ['cumin', 2], ['smoked-paprika', 2], ['chilli-flakes', 1], ['tinned-tomatoes', 1], ['black-beans', 1, 'drained'], ['stock-cube', 1], ['rice', 300]],
     steps: [
       'Brown the mince in a large pan for 5 mins.',
@@ -31,6 +34,7 @@ export const RECIPES = [
     mins: 30, protein: 'chicken', cuisine: 'american', carb: 'rice', method: 'air-fryer', cost: 1,
     kcal: 580, proteinG: 46,
     image: img('photo-1678269367737-eb7f31f720f8', 'You Le'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/bbq-chicken-corn-rice', similar: true },
     ingredients: [['chicken-thighs', 800], ['bbq-sauce', 5], ['smoked-paprika', 1], ['rice', 300], ['broccoli', 1, 'florets'], ['olive-oil', 1]],
     steps: [
       'Put the rice on to cook.',
@@ -63,6 +67,7 @@ export const RECIPES = [
     mins: 25, protein: 'chicken', cuisine: 'mexican', carb: 'wraps', method: 'one-pan', cost: 1, fun: true,
     kcal: 590, proteinG: 46,
     image: img('photo-1666025954339-97a97468de17', 'Hybrid Storytellers'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/chicken-fajitas', similar: false },
     ingredients: [['chicken-breast', 650, 'sliced'], ['peppers', 3, 'sliced'], ['red-onion', 1, 'sliced'], ['fajita-seasoning', 2], ['olive-oil', 1], ['tortillas', 8], ['limes', 1], ['avocados', 2]],
     steps: [
       'Toss the sliced chicken, peppers and onion with the fajita seasoning and oil.',
@@ -79,6 +84,7 @@ export const RECIPES = [
     mins: 35, protein: 'chicken', cuisine: 'italian', carb: 'rice', method: 'hob', cost: 2,
     kcal: 560, proteinG: 40,
     image: img('photo-1682428617976-f25633ed8469', 'Luna Hu'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/asparagus-risotto', similar: true },
     ingredients: [['chicken-breast', 500, 'diced'], ['arborio', 300], ['frozen-peas', 150], ['asparagus', 250, 'chopped'], ['onions', 1, 'finely diced'], ['garlic', 2, 'crushed'], ['stock-cube', 2], ['lemons', 1], ['olive-oil', 2]],
     steps: [
       'Dissolve the stock cubes in 1.2L hot water.',
@@ -110,6 +116,7 @@ export const RECIPES = [
     mins: 30, protein: 'beef', cuisine: 'italian', carb: 'pasta', method: 'one-pan', cost: 1,
     kcal: 650, proteinG: 38,
     image: img('photo-1565086869529-8c7802cca7a0', 'Fidel Fernando'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/spaghetti-meatballs', similar: false },
     ingredients: [['beef-meatballs', 24], ['onions', 1, 'diced'], ['garlic', 2, 'crushed'], ['passata', 500], ['mixed-herbs', 2], ['spaghetti', 350], ['spinach', 100], ['olive-oil', 1]],
     steps: [
       'Brown the meatballs in the oil in a large pan for 6–8 mins, turning.',
@@ -125,6 +132,7 @@ export const RECIPES = [
     mins: 45, activeMins: 10, protein: 'chicken', cuisine: 'british', carb: 'potatoes', method: 'tray-bake', cost: 1,
     kcal: 600, proteinG: 44,
     image: img('photo-1599161146640-8d60bd2888e3', 'Branimir Petakov'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/honey-mustard-chicken-thighs-spring-veg', similar: true },
     ingredients: [['chicken-thighs', 800], ['new-potatoes', 750, 'halved'], ['frozen-peas', 200], ['honey', 3], ['wholegrain-mustard', 2], ['garlic', 2, 'crushed'], ['olive-oil', 2]],
     steps: [
       'Heat the oven to 210°C. Toss the potatoes in 1 tbsp oil on a large tray and roast for 10 mins.',
@@ -140,6 +148,7 @@ export const RECIPES = [
     mins: 30, protein: 'beef', cuisine: 'mexican', carb: 'wraps', method: 'one-pan', cost: 2, fun: true,
     kcal: 640, proteinG: 40,
     image: img('photo-1599974579688-8dbdd335c77f', 'Jeswin Thomas'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/speedy-beef-tacos', similar: false },
     ingredients: [['beef-mince', 500], ['chipotle-paste', 2], ['cumin', 1], ['smoked-paprika', 1], ['red-onion', 1, 'diced'], ['garlic', 2, 'crushed'], ['black-beans', 1, 'drained'], ['tortillas', 8], ['little-gem', 1, 'shredded'], ['cherry-tomatoes', 250, 'chopped'], ['limes', 1], ['rice', 200, 'for tomorrow’s lunch']],
     steps: [
       'Put the rice on to cook. It’s for tomorrow’s lunch bowls.',
@@ -156,6 +165,7 @@ export const RECIPES = [
     mins: 20, protein: 'chicken', cuisine: 'chinese', carb: 'noodles', method: 'one-pan', cost: 1, fun: true,
     kcal: 600, proteinG: 44,
     image: img('photo-1607328874071-45a9cd600644', 'Hanxiao Xu'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/chicken-chow-mein-0', similar: false },
     ingredients: [['chicken-breast', 600, 'sliced'], ['egg-noodles', 300], ['stir-fry-veg', 300], ['spring-onions', 4], ['garlic', 2, 'crushed'], ['ginger', 2, 'grated'], ['soy-sauce', 3], ['oyster-sauce', 2], ['honey', 1], ['sesame-oil', 1]],
     steps: [
       'Cook the noodles following the packet, then drain.',
@@ -171,6 +181,7 @@ export const RECIPES = [
     mins: 45, activeMins: 25, protein: 'lamb', cuisine: 'british', carb: 'potatoes', method: 'hob', cost: 2,
     kcal: 610, proteinG: 36,
     image: img('photo-1696935257293-9ec4f03074a1', 'The Fry Family Food Co.'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/no-fuss-shepherds-pie', similar: false },
     ingredients: [['lamb-mince', 500], ['onions', 1, 'diced'], ['carrots', 2, 'diced'], ['frozen-peas', 150], ['stock-cube', 1], ['tomato-puree', 2], ['potatoes', 1200, 'chunked'], ['olive-oil', 2]],
     steps: [
       'Boil the potatoes for 15 mins until tender. Heat the oven to 220°C.',
@@ -187,6 +198,7 @@ export const RECIPES = [
     mins: 35, protein: 'chicken', cuisine: 'british', carb: 'potatoes', method: 'air-fryer', cost: 1,
     kcal: 560, proteinG: 46,
     image: img('photo-1700956026134-107cfb1cc7b1', 'MealPro'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/piri-piri-chicken-smashed-sweet-potatoes-broccoli', similar: true },
     ingredients: [['chicken-breast', 650], ['garlic', 4, 'crushed'], ['mixed-herbs', 1], ['sweet-potatoes', 3, 'cubed'], ['green-beans', 200], ['lemons', 1], ['olive-oil', 2]],
     steps: [
       'Toss the sweet potato in 1 tbsp oil and air fry at 200°C for 20 mins, shaking halfway.',
@@ -217,6 +229,7 @@ export const RECIPES = [
     mins: 30, protein: 'chicken', cuisine: 'thai', carb: 'rice', method: 'one-pan', cost: 2, fun: true,
     kcal: 640, proteinG: 42,
     image: img('photo-1587040690786-b091531837a2', 'iMattSmart'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/thai-red-chicken-curry', similar: false },
     ingredients: [['chicken-thighs', 700, 'chopped'], ['red-curry-paste', 3], ['coconut-milk', 1], ['peppers', 1, 'sliced'], ['green-beans', 200, 'halved'], ['fish-sauce', 1], ['limes', 1], ['rice', 300]],
     steps: [
       'Put the rice on to cook.',
@@ -232,6 +245,7 @@ export const RECIPES = [
     mins: 20, protein: 'chicken', cuisine: 'thai', carb: 'noodles', method: 'one-pan', cost: 1,
     kcal: 660, proteinG: 48,
     image: img('photo-1558985212-324add95595a', 'Youjeen Cho'),
+    link: { url: 'https://www.bbcgoodfood.com/recipes/peanut-chicken-noodles', similar: true },
     ingredients: [['chicken-breast', 600, 'sliced'], ['udon', 600], ['red-curry-paste', 2], ['peanut-butter', 3], ['soy-sauce', 2], ['limes', 1], ['coconut-milk', 1], ['pak-choi', 2, 'quartered'], ['spring-onions', 4]],
     steps: [
       'Fry the chicken in a large pan for 5–6 mins until cooked, then add the curry paste for 1 min.',
