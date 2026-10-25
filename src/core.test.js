@@ -60,10 +60,10 @@ describe('shopping list', () => {
   it('moves "already have" items out of the buy list', () => {
     const week = emptyWeek('2026-10-12')
     week.days.mon.recipeId = 'chicken-fajitas'
-    week.have = { avocados: true }
+    week.have = { peppers: true }
     const list = buildShoppingList(week, baseState())
-    expect(list.toBuy.some(i => i.id === 'avocados')).toBe(false)
-    expect(list.have.map(i => i.id)).toContain('avocados')
+    expect(list.toBuy.some(i => i.id === 'peppers')).toBe(false)
+    expect(list.have.map(i => i.id)).toContain('peppers')
   })
   it('skips eating-out days', () => {
     const week = emptyWeek('2026-10-12')
@@ -143,7 +143,7 @@ describe('agent commands', () => {
   })
   it("we've got chicken and peppers that need using", () => {
     expect(interpretRules("We've got chicken and peppers that need using", { today: MON }).ops[0].ingredients)
-      .toEqual(expect.arrayContaining(['chicken-breast', 'peppers']))
+      .toEqual(expect.arrayContaining(['chicken-thighs', 'peppers']))
   })
   it("I don't fancy Monday's meal", () => {
     const r = run("I don't fancy Monday's meal", fullWeek())
@@ -184,7 +184,7 @@ describe('custom recipe parser', () => {
     expect(parseIngredientLine('400g chicken breast, sliced')).toEqual(['chicken-breast', 400, 'sliced'])
     expect(parseIngredientLine('1kg beef mince')).toEqual(['beef-mince', 1000])
     expect(parseIngredientLine('2 peppers')).toEqual(['peppers', 2])
-    expect(parseIngredientLine('3 cloves garlic')).toEqual(['garlic', 3])
+    expect(parseIngredientLine('3 cloves garlic')).toEqual(['lazy-garlic', 3])
     expect(parseIngredientLine('1 tin chickpeas')).toEqual(['chickpeas', 1])
   })
   it('keeps unknown lines as text', () => {
@@ -259,7 +259,7 @@ describe('asking for a recipe by name', () => {
     const op = text => interpretRules(text, { state: baseState(), today: MON }).ops.at(-1)
     expect(op("let's have meatballs on wednesday")).toEqual({ op: 'set_meal', day: 'wed', recipeId: 'meatballs' })
     expect(op('make chow mein thursday')).toEqual({ op: 'set_meal', day: 'thu', recipeId: 'chicken-chow-mein' })
-    expect(op('we want the pie on friday')).toEqual({ op: 'set_meal', day: 'fri', recipeId: 'pie-night' })
+    expect(op('we want the steak pie on friday')).toEqual({ op: 'set_meal', day: 'fri', recipeId: 'pie-night' })
     expect(op('have shepherds pie on monday')).toEqual({ op: 'set_meal', day: 'mon', recipeId: 'speedy-shepherds-pie' })
   })
 })
@@ -269,5 +269,42 @@ describe('recipe links', () => {
     const linked = RECIPES.filter(r => r.link)
     expect(linked.length).toBe(12)
     linked.forEach(r => expect(r.link.url).toMatch(/^https:\/\/www\.bbcgoodfood\.com\/recipes\/[a-z0-9-]+$/))
+  })
+})
+
+describe('household tweaks', () => {
+  const week = ids => { const w = emptyWeek('2026-10-12'); ids.forEach((id, i) => { w.days[DAYS[i]].recipeId = id }); return w }
+  it('uses chicken thighs, never breast', () => {
+    expect(RECIPES.some(r => r.ingredients.some(l => l[0] === 'chicken-breast'))).toBe(false)
+  })
+  it('keeps jars and bottles off the weekly list', () => {
+    const list = buildShoppingList(week(['honey-mustard-traybake', 'bbq-chicken', 'chicken-chow-mein', 'red-thai-peanut-udon']), baseState())
+    const toBuy = list.toBuy.map(i => i.id)
+    for (const id of ['wholegrain-mustard', 'bbq-sauce', 'oyster-sauce', 'peanut-butter', 'lazy-garlic', 'lazy-ginger', 'red-curry-paste'])
+      expect(toBuy).not.toContain(id)
+    expect(list.pantry.map(i => i.id)).toEqual(expect.arrayContaining(['wholegrain-mustard', 'lazy-garlic']))
+  })
+  it('lets you add a staple back when you run out', () => {
+    const w = week(['honey-mustard-traybake'])
+    w.need = { 'wholegrain-mustard': true }
+    expect(buildShoppingList(w, baseState()).toBuy.map(i => i.id)).toContain('wholegrain-mustard')
+  })
+  it('buys kits for tacos and fajitas instead of loose spices and wraps', () => {
+    const toBuy = buildShoppingList(week(['beef-tacos', 'chicken-fajitas']), baseState()).toBuy.map(i => i.id)
+    expect(toBuy).toEqual(expect.arrayContaining(['taco-kit', 'fajita-kit', 'sour-cream', 'grated-cheese', 'avocados']))
+    expect(toBuy).not.toContain('tortillas')
+    expect(toBuy).not.toContain('cherry-tomatoes')
+  })
+})
+
+describe('steak salad', () => {
+  it('is only ever planned for a Friday', () => {
+    const state = baseState()
+    let fridays = 0
+    for (let s = 1; s <= 60; s++) {
+      const picks = planDays({ state, week: emptyWeek('2026-10-12'), days: DAYS, today: MON, rng: seeded(s) })
+      DAYS.forEach(d => { if (picks[d] === 'steak-salad') { expect(d).toBe('fri'); fridays++ } })
+    }
+    expect(fridays).toBeGreaterThan(0)
   })
 })

@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { Clock, Heart, Search } from 'lucide-react'
+import { Clock, Heart, Search, Plus } from 'lucide-react'
 import { useApp } from '../context'
 import { PageHeader } from './Layout'
 import { FoodImage } from './ui'
+import AddRecipeSheet from './AddRecipeSheet'
 import { allRecipes, keyComponents } from '../domain/recipes'
 import { PROTEINS } from '../data/recipes'
 
@@ -10,6 +11,7 @@ export default function RecipesPage() {
   const { state, actions, openRecipe } = useApp()
   const [filter, setFilter] = useState('all')
   const [q, setQ] = useState('')
+  const [adding, setAdding] = useState(false)
   const recipes = allRecipes(state)
   const proteins = Object.entries(PROTEINS).filter(([id]) => recipes.some(r => r.protein === id))
   const shown = recipes
@@ -19,7 +21,8 @@ export default function RecipesPage() {
 
   return (
     <div className="min-h-[100dvh] pb-28">
-      <PageHeader title="Recipes" subtitle={`${recipes.length} in your rotation`} />
+      <PageHeader title="Recipes" subtitle={`${recipes.length} in your rotation`}
+        right={<button className="btn-primary btn-sm" onClick={() => setAdding(true)}><Plus size={16} /> Add</button>} />
       <main className="max-w-2xl mx-auto px-4 sm:px-6">
         <label className="mt-2 flex items-center gap-2 bg-mist rounded-full px-4 h-11">
           <Search size={17} className="text-ink-faint" />
@@ -59,6 +62,7 @@ export default function RecipesPage() {
           {!shown.length && <li className="py-16 text-center text-ink-faint">{filter === 'loved' ? 'Heart a recipe and it shows up here.' : 'No matches'}</li>}
         </ul>
       </main>
+      <AddRecipeSheet open={adding} onClose={() => setAdding(false)} />
     </div>
   )
 }
