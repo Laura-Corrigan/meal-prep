@@ -90,7 +90,7 @@ export function Toast({ toast, onClose }) {
   }, [toast, onClose])
   if (!toast) return null
   return (
-    <div className="fixed left-0 right-0 bottom-[calc(9.5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 pointer-events-none">
+    <div className="fixed left-0 right-0 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] flex justify-center px-4 pointer-events-none">
       <div role="status" className="pointer-events-auto anim-rise max-w-md w-full bg-ink text-white rounded-2xl shadow-lift px-4 py-3 flex items-start gap-3">
         <div className="flex-1 text-sm leading-relaxed">
           {toast.title && <p className="font-semibold">{toast.title}</p>}
