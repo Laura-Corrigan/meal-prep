@@ -323,3 +323,20 @@ describe('microwave rice', () => {
     expect(parseIngredientLine('2 pouches microwave rice')).toEqual(['rice', 2])
   })
 })
+
+import { claudeBasketPrompt } from './tesco/claudePrompt'
+describe('Claude in Chrome basket hand-off', () => {
+  it('lists what to buy with pack sizes, exact products and milk checks', () => {
+    const w = emptyWeek('2026-10-26')
+    w.days.mon.recipeId = 'beef-tacos'
+    w.days.fri.recipeId = 'meatballs'
+    w.have = { 'grated-cheese': true }
+    const items = buildShoppingList(w, baseState()).groups.flatMap(g => g.items)
+    const text = claudeBasketPrompt(items, { remembered: { 'beef-mince': '123456' }, weekLabel: '26–30 Oct' })
+    expect(text).toMatch(/Don't check out/)
+    expect(text).toMatch(/Beef meatballs – 2 × 12 pack/)
+    expect(text).toMatch(/products\/123456/)
+    expect(text).toMatch(/Garlic dough balls – pack \(must be no milk/)
+    expect(text).not.toMatch(/cheddar/i)
+  })
+})

@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { Check, ChevronDown, Copy, ShoppingBasket } from 'lucide-react'
+import { Check, ChevronDown, Copy, ShoppingBasket, Sparkles, CircleCheck } from 'lucide-react'
 import { useApp } from '../context'
 import { PageHeader, BottomAction } from './Layout'
 import { buildShoppingList, shoppingListText } from '../domain/shopping'
 import { CATEGORIES } from '../data/ingredients'
 import { DAYS, weekRangeLabel } from '../domain/week'
+import { claudeBasketPrompt } from '../tesco/claudePrompt'
 
 function ItemRow({ item, have, onToggle }) {
   return (
@@ -34,13 +35,23 @@ export default function ShoppingPage() {
     .map(c => ({ ...c, items: all.filter(i => i.cat === c.id).sort((a, b) => a.name.localeCompare(b.name)) }))
     .filter(g => g.items.length)
 
+  const sendToClaude = async () => {
+    if (!week.approved) actions.approve(true)
+    const items = groups.flatMap(g => g.items).filter(i => !haveIds.has(i.id))
+    const text = claudeBasketPrompt(items, { remembered: state.tescoProducts, weekLabel: weekRangeLabel(weekStart) })
+    try {
+      await navigator.clipboard.writeText(text)
+      setToast({ title: 'Copied for Claude in Chrome', lines: ['Paste it into the Claude side panel in Chrome, logged into tesco.com. Then pick a slot and pay.'] })
+    } catch { setToast({ title: "Couldn't copy on this device" }) }
+  }
+
   const copy = async () => {
     try { await navigator.clipboard.writeText(shoppingListText(week, state)); setToast({ title: 'Shopping list copied' }) }
     catch { setToast({ title: "Couldn't copy on this device" }) }
   }
 
   return (
-    <div className="min-h-[100dvh] pb-44">
+    <div className="min-h-[100dvh] pb-60">
       <PageHeader
         title="Shopping list"
         subtitle={`${weekRangeLabel(weekStart)} · ${meals} dinner${meals === 1 ? '' : 's'}`}
@@ -103,9 +114,26 @@ export default function ShoppingPage() {
 
       {list.toBuy.length > 0 && (
         <BottomAction>
-          <button className="btn-primary w-full h-14 text-base shadow-lift" onClick={() => { if (!week.approved) actions.approve(true); go('tesco') }}>
-            <ShoppingBasket size={18} /> {week.tesco?.done ? 'Tesco order placed · review' : `Shop at Tesco · ${list.toBuy.length} items`}
-          </button>
+          {week.tesco?.done ? (
+            <div className="flex items-center justify-between gap-3 rounded-full bg-sage-soft pl-5 pr-2 h-14 shadow-lift">
+              <span className="inline-flex items-center gap-2 font-bold text-sage"><CircleCheck size={18} /> Tesco order placed</span>
+              <button className="btn-ghost btn-sm !bg-white" onClick={() => actions.tescoDone(false)}>Undo</button>
+            </div>
+          ) : (
+            <>
+              <button className="btn-primary w-full h-14 text-base shadow-lift" onClick={sendToClaude}>
+                <Sparkles size={18} /> Copy for Claude in Chrome
+              </button>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <button className="btn-ghost btn-sm !h-11" onClick={() => { if (!week.approved) actions.approve(true); go('tesco') }}>
+                  <ShoppingBasket size={15} /> One by one
+                </button>
+                <button className="btn-ghost btn-sm !h-11" onClick={() => actions.tescoDone(true)}>
+                  <Check size={15} /> Order placed
+                </button>
+              </div>
+            </>
+          )}
         </BottomAction>
       )}
     </div>
