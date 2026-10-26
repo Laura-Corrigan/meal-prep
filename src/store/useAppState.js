@@ -60,13 +60,16 @@ export function useAppState() {
     const local = loadLocal()
     const joined = linkedHousehold()
     const base = local || defaultState()
-    const state = joined && joined !== base.householdId ? { ...base, householdId: joined, updatedAt: 0 } : base
-    // Opened with a household in the address but nothing saved on this phone:
-    // fetch the plan before showing anything, rather than the setup questions.
-    return { state, restoring: syncEnabled && !!joined && !(local?.onboarded && local.householdId === joined) }
+    // Joining a different household (a shared link, or this device lost its
+    // data): set this device's own plan aside entirely and show nothing until
+    // the shared plan has loaded, so nothing stale can be saved over it.
+    const switching = !!joined && joined !== base.householdId
+    const state = switching ? { ...defaultState(), householdId: joined } : base
+    return { state, restoring: syncEnabled && !!joined && (switching || !local?.onboarded) }
   })
   const [state, setState] = useState(boot.state)
   const [restoring, setRestoring] = useState(boot.restoring)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [sync, setSync] = useState(syncEnabled ? 'connecting' : 'local')
   const pushTimer = useRef(null)
   const latest = useRef(state)
@@ -84,6 +87,7 @@ export function useAppState() {
   const refresh = useCallback(async () => {
     if (!syncEnabled) return
     const mine = latest.current
+    setLoadFailed(false)
     try {
       const remote = await pull(mine.householdId)
       if (remote && (remote.updatedAt || 0) > (mine.updatedAt || 0)) {
@@ -94,10 +98,13 @@ export function useAppState() {
         if (mine.onboarded) await push(mine.householdId, mine)
       }
       setSync('synced')
+      setRestoring(false)
     } catch {
       setSync('offline')
-    } finally {
-      setRestoring(false)
+      // Still waiting on a shared plan: keep the app locked rather than
+      // falling through to setup, which would create a competing plan.
+      if (!latest.current.onboarded && linkedHousehold()) setLoadFailed(true)
+      else setRestoring(false)
     }
   }, [])
 
@@ -134,5 +141,5 @@ export function useAppState() {
     setState(fresh)
   }, [])
 
-  return { state, update, updateWeek, reset, sync, refresh, restoring }
+  return { state, update, updateWeek, reset, sync, refresh, restoring, loadFailed }
 }

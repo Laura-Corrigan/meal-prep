@@ -23,7 +23,7 @@ function getToday() {
 }
 
 export default function App() {
-  const { state, update, updateWeek, reset, sync, restoring } = useAppState()
+  const { state, update, updateWeek, reset, sync, restoring, loadFailed, refresh } = useAppState()
   const today = useMemo(getToday, [])
   const thisWeek = mondayOf(today)
   const [weekStart, setWeekStart] = useState(() => planningWeekStart(today))
@@ -149,9 +149,19 @@ export default function App() {
 
   if (restoring && !state.onboarded) {
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-3 text-ink-faint">
-        <span className="w-8 h-8 rounded-full border-[3px] border-line border-t-ink animate-spin" />
-        <p className="text-sm font-semibold">Loading your plan…</p>
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-3 px-8 text-center text-ink-faint">
+        {loadFailed ? (
+          <>
+            <p className="text-lg font-extrabold text-ink">Couldn't load your plan</p>
+            <p className="text-sm">Check you're online, then try again. Nothing has been changed.</p>
+            <button className="btn-primary mt-2" onClick={refresh}>Try again</button>
+          </>
+        ) : (
+          <>
+            <span className="w-8 h-8 rounded-full border-[3px] border-line border-t-ink animate-spin" />
+            <p className="text-sm font-semibold">Loading your plan…</p>
+          </>
+        )}
       </div>
     )
   }
